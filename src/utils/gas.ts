@@ -1,8 +1,6 @@
-// import fetch, { Response } from 'node-fetch';
+// we're using 2.6 because 3 had an issue with jest. thus the require vs import
+// https://github.com/node-fetch/node-fetch/discussions/1503
 const fetch = require('node-fetch');
-
-// import axios from 'axios';
-// import { EthGasStationApiResponse } from './gas.types.js';
 
 type EthGasStationApiResponse = {
   status: string;
