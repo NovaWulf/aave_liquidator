@@ -2,7 +2,7 @@
 // https://github.com/node-fetch/node-fetch/discussions/1503
 const fetch = require('node-fetch');
 
-type EthGasStationApiResponse = {
+type EtherscanGasApiResponse = {
   status: string;
   message: string;
   result: {
@@ -24,7 +24,7 @@ export const getGas = async function () {
       headers: { 'Content-Type': 'application/json' },
     },
   );
-  const data = (await response.json()) as EthGasStationApiResponse;
+  const data = (await response.json()) as EtherscanGasApiResponse;
   const fastPrice = parseInt(data.result.FastGasPrice);
 
   console.log(`Current ETH Gas Prices (in GWEI): ${fastPrice}`);
