@@ -1,6 +1,7 @@
 // we're using 2.6 because 3 had an issue with jest. thus the require vs import
 // https://github.com/node-fetch/node-fetch/discussions/1503
-const fetch = require('node-fetch');
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+import fetch from 'node-fetch';
 
 type EtherscanGasApiResponse = {
   status: string;
