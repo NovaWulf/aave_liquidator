@@ -1,18 +1,20 @@
 // import { v2 } from '@aave/protocol-js';
 
-// const ALLOWED_LIQUIDATION = 0.5; //50% of a borrowed asset can be liquidated
+import { TOKEN_LIST } from '../chains.js';
+
+const ALLOWED_LIQUIDATION = 0.5; //50% of a borrowed asset can be liquidated
 const HEALTH_FACTOR_MAX = 1; //liquidation can happen when less than 1
-export const PROFIT_THRESHOLD = 0.1 * 10 ** 18; //in eth. A bonus below this will be ignored
+export const BONUS_THRESHOLD = 0.1 * 10 ** 18; //in eth. A bonus below this will be ignored
 
 type UnhealthyLoanSummary = {
   userId: string;
   healthFactor: number;
-  max_collateralSymbol: string;
-  max_borrowedSymbol: string;
-  max_borrowedPrincipal: number;
-  max_borrowedPriceInEth: number;
-  max_collateralBonus: number;
-  max_collateralPriceInEth: number;
+  maxCollateralSymbol: string;
+  maxBorrowedSymbol: string;
+  maxBorrowedPrincipal: number;
+  maxBorrowedPriceInEth: number;
+  maxCollateralBonus: number;
+  maxCollateralPriceInEth: number;
 };
 
 export type AaveUser = {
@@ -59,50 +61,57 @@ export function parseUnhealthyLoans(users: AaveUser[]): UnhealthyLoanSummary[] {
 
   users.forEach((user) => {
     let totalBorrowed = 0;
-    // let totalCollateral = 0;
     let totalCollateralThreshold = 0;
-    let max_borrowedSymbol;
-    let max_borrowedPrincipal = 0;
-    let max_borrowedPriceInEth = 0;
-    let max_collateralSymbol;
-    let max_collateralBonus = 0;
-    let max_collateralPriceInEth = 0;
+    let maxBorrowedSymbol: string;
+    let maxBorrowedPrincipal = 0;
+    let maxBorrowedPriceInEth = 0;
+    let maxCollateralSymbol: string;
+    let maxCollateralBonus = 0;
+    let maxCollateralPriceInEth = 0;
 
+    // loop through all borrow and add up total borrowed in eth
+    // keep track of the largest borrow
     user.borrowReserve.forEach((borrowReserve) => {
-      const priceInEth = parseInt(borrowReserve.reserve.price.priceInEth);
       const principalBorrowed = parseInt(borrowReserve.currentTotalDebt);
+
+      const { reserve } = borrowReserve;
+      const priceInEth = parseInt(reserve.price.priceInEth);
       totalBorrowed +=
-        (priceInEth * principalBorrowed) / 10 ** borrowReserve.reserve.decimals;
-      if (principalBorrowed > max_borrowedPrincipal)
-        max_borrowedSymbol = borrowReserve.reserve.symbol;
-      max_borrowedPrincipal = principalBorrowed;
-      max_borrowedPriceInEth = priceInEth;
+        (priceInEth * principalBorrowed) / 10 ** reserve.decimals;
+      if (principalBorrowed > maxBorrowedPrincipal) {
+        maxBorrowedSymbol = reserve.symbol;
+        maxBorrowedPrincipal = principalBorrowed;
+        maxBorrowedPriceInEth = priceInEth;
+      }
     });
 
+    // for each collateral, calculate the amount, liquidation threshold and bonus\
+    // and the total collateral threshold
+
     user.collateralReserve.forEach((collateralReserve) => {
-      const priceInEth = parseInt(collateralReserve.reserve.price.priceInEth);
       const principalATokenBalance = parseInt(
         collateralReserve.currentATokenBalance,
       );
-      const reserveLiquidationThreshold = parseInt(
-        collateralReserve.reserve.reserveLiquidationThreshold,
-      );
-      const reserveLiquidationBonus = parseInt(
-        collateralReserve.reserve.reserveLiquidationBonus,
-      );
 
-      // totalCollateral +=
-      //   (priceInEth * principalATokenBalance) /
-      //   10 ** collateralReserve.reserve.decimals;
+      const { reserve } = collateralReserve;
+
+      const priceInEth = parseInt(reserve.price.priceInEth);
+      const reserveLiquidationThreshold = parseInt(
+        reserve.reserveLiquidationThreshold,
+      );
+      const reserveLiquidationBonus = parseInt(reserve.reserveLiquidationBonus);
+
       totalCollateralThreshold +=
         (priceInEth *
           principalATokenBalance *
           (reserveLiquidationThreshold / 10000)) /
         10 ** collateralReserve.reserve.decimals;
-      if (reserveLiquidationBonus > max_collateralBonus) {
-        max_collateralSymbol = collateralReserve.reserve.symbol;
-        max_collateralBonus = reserveLiquidationBonus;
-        max_collateralPriceInEth = priceInEth;
+
+      // track the best collateral to liquidate
+      if (reserveLiquidationBonus > maxCollateralBonus) {
+        maxCollateralSymbol = reserve.symbol;
+        maxCollateralBonus = reserveLiquidationBonus;
+        maxCollateralPriceInEth = priceInEth;
       }
     });
 
@@ -112,15 +121,31 @@ export function parseUnhealthyLoans(users: AaveUser[]): UnhealthyLoanSummary[] {
       unhealthy.push({
         userId: user.id,
         healthFactor: healthFactor,
-        max_collateralSymbol: max_collateralSymbol,
-        max_borrowedSymbol: max_borrowedSymbol,
-        max_borrowedPrincipal: max_borrowedPrincipal,
-        max_borrowedPriceInEth: max_borrowedPriceInEth,
-        max_collateralBonus: max_collateralBonus / 10000,
-        max_collateralPriceInEth: max_collateralPriceInEth,
+        maxCollateralSymbol: maxCollateralSymbol,
+        maxBorrowedSymbol: maxBorrowedSymbol,
+        maxBorrowedPrincipal: maxBorrowedPrincipal,
+        maxBorrowedPriceInEth: maxBorrowedPriceInEth,
+        maxCollateralBonus: maxCollateralBonus / 10000,
+        maxCollateralPriceInEth: maxCollateralPriceInEth,
       });
     }
   });
 
   return unhealthy;
+}
+
+// is the bonus on 50% of the biggest loan greater than .1 ETH?
+export function minBonus(loans: UnhealthyLoanSummary[]) {
+  return loans.filter((loan) => {
+    const liquidationAmount =
+      loan.maxBorrowedPrincipal *
+      ALLOWED_LIQUIDATION *
+      (loan.maxBorrowedPriceInEth /
+        10 ** TOKEN_LIST[loan.maxBorrowedSymbol].decimals);
+    const loanProfit = liquidationAmount * (loan.maxCollateralBonus - 1.0);
+
+    console.log('ETH Profit: ' + loanProfit / 10 ** 18);
+
+    return loanProfit >= BONUS_THRESHOLD;
+  });
 }
