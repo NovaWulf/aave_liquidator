@@ -6,7 +6,7 @@ const ALLOWED_LIQUIDATION = 0.5; //50% of a borrowed asset can be liquidated
 const HEALTH_FACTOR_MAX = 1; //liquidation can happen when less than 1
 export const BONUS_THRESHOLD = 0.1 * 10 ** 18; //in eth. A bonus below this will be ignored
 
-type UnhealthyLoanSummary = {
+type AaveLoanSummary = {
   userId: string;
   healthFactor: number;
   maxCollateralSymbol: string;
@@ -54,10 +54,8 @@ export type AaveUser = {
   }[];
 };
 
-export function parseUnhealthyLoans(users: AaveUser[]): UnhealthyLoanSummary[] {
-  console.log('unhealthy parsing');
-
-  const unhealthy: UnhealthyLoanSummary[] = [];
+export function parseUnhealthyLoans(users: AaveUser[]): AaveLoanSummary[] {
+  const unhealthy: AaveLoanSummary[] = [];
 
   users.forEach((user) => {
     let totalBorrowed = 0;
@@ -135,7 +133,7 @@ export function parseUnhealthyLoans(users: AaveUser[]): UnhealthyLoanSummary[] {
 }
 
 // is the bonus on 50% of the biggest loan greater than .1 ETH?
-export function minBonus(loans: UnhealthyLoanSummary[]) {
+export function minBonus(loans: AaveLoanSummary[]) {
   return loans.filter((loan) => {
     const liquidationAmount =
       loan.maxBorrowedPrincipal *

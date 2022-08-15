@@ -1,4 +1,4 @@
-import { minBonus, parseUnhealthyLoans } from '../../src/loans/unhealthy.js';
+import { minBonus, parseUnhealthyLoans } from '../../src/loans/aave.js';
 
 describe('healthy loan', () => {
   const user = {

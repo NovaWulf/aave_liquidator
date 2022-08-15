@@ -1,6 +1,6 @@
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 import fetch from 'node-fetch';
-import { AaveUser } from '../loans/unhealthy.js';
+import { AaveUser } from '../loans/aave.js';
 
 const THE_GRAPH_URL_KOVAN =
   'https://api.thegraph.com/subgraphs/name/aave/protocol-v2-kovan';
