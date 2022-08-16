@@ -29,17 +29,15 @@
     "build:watch": "tsc -w -p tsconfig.json",
     "build:release": "npm run clean && tsc -p tsconfig.release.json",
     "lint": "eslint . --ext .ts --ext .mts",
-    "test": "NODE_OPTIONS=--experimental-vm-modules jest --coverage",
+    "test": "jest --coverage",
     "prettier": "prettier --config .prettierrc --write .",
     "test:watch": "jest --watch"
   },
-  "author": "Jakub Synowiec <jsynowiec@users.noreply.github.com>",
-  "license": "Apache-2.0",
+  "author": "Nader Akhnoukh <iamnader@users.noreply.github.com>",
   "dependencies": {
-    "@types/node-fetch": "^3.0.2",
     "@uniswap/sdk": "^3.0.3",
     "dotenv": "^16.0.1",
-    "node-fetch": "^3.2.10",
+    "node-fetch": "^2.6.7",
     "tslib": "~2.4"
   }
 }

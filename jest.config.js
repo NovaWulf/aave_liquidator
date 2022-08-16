@@ -13,7 +13,7 @@ export default {
     '^.+\\.(ts|tsx)$': 'ts-jest',
     '^.+\\.(js)$': 'babel-jest',
   },
-  transformIgnorePatterns: [],
+  transformIgnorePatterns: ['<rootDir>/node_modules/'],
   setupFiles: ['dotenv/config'],
   testRegex: '(/__tests__/.*|(\\.|/)(test|spec))\\.(m)?ts$',
   coverageDirectory: 'coverage',
