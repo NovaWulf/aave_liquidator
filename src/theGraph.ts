@@ -1,6 +1,6 @@
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 import fetch from 'node-fetch';
-import { AaveUser } from '../loans/aave.js';
+import { AaveUser } from './aave.js';
 
 const THE_GRAPH_URL_KOVAN =
   'https://api.thegraph.com/subgraphs/name/aave/protocol-v2-kovan';
@@ -14,7 +14,6 @@ export const getLoans = async function (
   userId?: string,
 ): Promise<AaveUser[]> {
   // let maxCount = 6;
-  console.log('hi');
 
   const count = 0;
   let userIdQuery = '';

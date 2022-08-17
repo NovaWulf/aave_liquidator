@@ -1,4 +1,4 @@
-import { getLoans } from '../../src/lib/theGraph.js';
+import { getLoans } from '../src/theGraph.js';
 
 describe('getLoans', () => {
   it('returns loan count', async () => {
