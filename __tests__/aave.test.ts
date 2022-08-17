@@ -1,6 +1,6 @@
-import { minBonus, parseUnhealthyLoans } from '../../src/loans/aave.js';
+import { minBonus, parseUnhealthyLoans } from '../src/aave.js';
 
-describe('healthy loan', () => {
+describe('mocked healthy loan', () => {
   const user = {
     id: '0xffff8941130157a0153fb5be2618b257f28d3b55',
     borrowedReservesCount: 2,
@@ -61,7 +61,7 @@ describe('healthy loan', () => {
   });
 });
 
-describe('unhealthy loan', () => {
+describe('mocked unhealthy loan', () => {
   const user = {
     id: '0xffff8941130157a0153fb5be2618b257f28d3b55',
     borrowedReservesCount: 2,
@@ -116,6 +116,7 @@ describe('unhealthy loan', () => {
       },
     ],
   };
+
   it('returns loan count', () => {
     const unhealthy = parseUnhealthyLoans([user]);
 

@@ -1,12 +1,11 @@
-// import { v2 } from '@aave/protocol-js';
+import { TOKEN_LIST } from './chains.js';
 
-import { TOKEN_LIST } from '../chains.js';
-
-const ALLOWED_LIQUIDATION = 0.5; //50% of a borrowed asset can be liquidated
+export const ALLOWED_LIQUIDATION = 0.5; //50% of a borrowed asset can be liquidated
 const HEALTH_FACTOR_MAX = 1; //liquidation can happen when less than 1
 export const BONUS_THRESHOLD = 0.1 * 10 ** 18; //in eth. A bonus below this will be ignored
+export const FLASH_LOAN_FEE = 0.009;
 
-type AaveLoanSummary = {
+export type AaveLoanSummary = {
   userId: string;
   healthFactor: number;
   maxCollateralSymbol: string;
@@ -128,6 +127,7 @@ export function parseUnhealthyLoans(users: AaveUser[]): AaveLoanSummary[] {
       });
     }
   });
+  console.log(`Found ${unhealthy.length} unhealthy loans`);
 
   return unhealthy;
 }
@@ -146,4 +146,10 @@ export function minBonus(loans: AaveLoanSummary[]) {
 
     return loanProfit >= BONUS_THRESHOLD;
   });
+}
+
+// percent is represented as a number less than 1 ie 0.75 is equivalent to 75%
+// multiply base and percent and return a BigInt
+export function percentBigInt(base: bigint, percent: number): bigint {
+  return BigInt((base * BigInt(percent * 10000)) / 10000n);
 }

@@ -1,5 +1,11 @@
 // eslint-disable max-len
-import { ChainId, Token } from '@uniswap/sdk'
+import { ChainId, Token, WETH } from '@uniswap/sdk'
+
+type ChainTokenList = {
+  readonly [chainId in ChainId]: Token[]
+}
+
+// change this to load dynamically https://gateway.ipfs.io/ipns/tokens.uniswap.org
 
 const tokenListMainnet=
 {
@@ -65,3 +71,18 @@ const token_list =
 
 const chainId = process.env.CHAIN == "mainnet" ? ChainId.MAINNET : ChainId.KOVAN
 export const TOKEN_LIST = token_list[chainId]
+
+
+const WETH_ONLY: ChainTokenList = {
+  [ChainId.MAINNET]: [WETH[ChainId.MAINNET]],
+  [ChainId.ROPSTEN]: [WETH[ChainId.ROPSTEN]],
+  [ChainId.RINKEBY]: [WETH[ChainId.RINKEBY]],
+  [ChainId.GÖRLI]: [WETH[ChainId.GÖRLI]],
+  [ChainId.KOVAN]: [WETH[ChainId.KOVAN]]
+}
+
+// used to construct intermediary pairs for trading
+export const BASES_TO_CHECK_TRADES_AGAINST: ChainTokenList = {
+  ...WETH_ONLY,
+  [ChainId.MAINNET]: [...WETH_ONLY[ChainId.MAINNET], ...["DAI", "USDC", "USDT", "COMP", "MKR"].map(t => tokenListMainnet[t])]
+}
