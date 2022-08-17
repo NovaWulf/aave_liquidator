@@ -1,5 +1,5 @@
 import * as dotenv from 'dotenv';
-import { getLoans } from './lib/theGraph.js';
+import { getLoans } from './theGraph.js';
 dotenv.config();
 
 run();
