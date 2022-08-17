@@ -3,6 +3,8 @@
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 import fetch from 'node-fetch';
 
+const GAS_USED_ESTIMATE = 1000000;
+
 type EtherscanGasApiResponse = {
   status: string;
   message: string;
@@ -15,6 +17,7 @@ type EtherscanGasApiResponse = {
     gasUsedRatio: string;
   };
 };
+export let gasCost = 0;
 
 //returns gas for rapid time (within 15s)
 export const getGas = async function () {
@@ -26,9 +29,13 @@ export const getGas = async function () {
     },
   );
   const data = (await response.json()) as EtherscanGasApiResponse;
-  const fastPrice = parseInt(data.result.FastGasPrice);
+  gasCost = parseInt(data.result.FastGasPrice);
 
-  console.log(`Current ETH Gas Prices (in GWEI): ${fastPrice}`);
+  console.log(`Current ETH Gas Prices (in GWEI): ${gasCost}`);
 
-  return fastPrice;
+  return gasCost;
+};
+
+export const gasCostToLiquidate = async function () {
+  return BigInt(gasCost * GAS_USED_ESTIMATE);
 };
