@@ -1,4 +1,4 @@
-import { minBonus, parseUnhealthyLoans } from '../src/aave.js';
+import { AaveLoanSummary, minBonus, parseUnhealthyLoans } from '../src/aave.js';
 
 describe('mocked healthy loan', () => {
   const user = {
@@ -126,15 +126,17 @@ describe('mocked unhealthy loan', () => {
 
 describe('unhealthy loan above threshold', () => {
   it('is has a big enough bonus', () => {
-    const unhealthyLoan = {
+    const unhealthyLoan: AaveLoanSummary = {
       userId: '0xabc',
       healthFactor: 0.13119476140428013,
       maxCollateralSymbol: 'WETH',
       maxBorrowedSymbol: 'DAI',
       maxBorrowedPrincipal: 2.379851736894203e22,
       maxBorrowedPriceInEth: 542907290000000,
+      maxBorrowedDecimals: 18,
       maxCollateralBonus: 1.05,
       maxCollateralPriceInEth: 1000000000000000000,
+      maxCollateralDecimals: 18,
     };
 
     const profitableLoans = minBonus([unhealthyLoan]);
@@ -144,15 +146,17 @@ describe('unhealthy loan above threshold', () => {
 
 describe('unhealthy loan below threshold', () => {
   it('does not have a bit enough bonus', () => {
-    const unhealthyLoan = {
+    const unhealthyLoan: AaveLoanSummary = {
       userId: '0xabc',
       healthFactor: 0.13119476140428013,
       maxCollateralSymbol: 'WETH',
       maxBorrowedSymbol: 'DAI',
       maxBorrowedPrincipal: 2.379851736894203e22,
       maxBorrowedPriceInEth: 542907290000000,
+      maxBorrowedDecimals: 18,
       maxCollateralBonus: 1.01,
       maxCollateralPriceInEth: 1000000000000000000,
+      maxCollateralDecimals: 18,
     };
 
     const profitableLoans = minBonus([unhealthyLoan]);
