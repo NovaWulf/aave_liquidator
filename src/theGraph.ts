@@ -2,18 +2,22 @@
 import fetch from 'node-fetch';
 import { AaveUser } from './aave.js';
 
+console.log(process.env.CHAIN);
+
 const THE_GRAPH_URL_KOVAN =
   'https://api.thegraph.com/subgraphs/name/aave/protocol-v2-kovan';
 const THE_GRAPH_URL_MAINNET =
   'https://api.thegraph.com/subgraphs/name/aave/protocol-v2';
-const THE_GRAPH_URL =
-  process.env.CHAIN == 'mainnet' ? THE_GRAPH_URL_MAINNET : THE_GRAPH_URL_KOVAN;
 
 export const getLoans = async function (
   tryAmount: number,
   userId?: string,
 ): Promise<AaveUser[]> {
   // let maxCount = 6;
+  const THE_GRAPH_URL =
+    process.env.CHAIN == 'mainnet'
+      ? THE_GRAPH_URL_MAINNET
+      : THE_GRAPH_URL_KOVAN;
 
   const count = 0;
   let userIdQuery = '';
