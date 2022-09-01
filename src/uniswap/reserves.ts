@@ -24,7 +24,6 @@ async function getReserves(tokens: [Token, Token][]): Promise<Pair[]> {
       if (tokenA && tokenB && tokenA.equals(tokenB)) {
         return null;
       }
-      //console.log (`tokenA ${tokenA.symbol} tokenB ${tokenB.symbol}`)
       try {
         const pairDetails = await Fetcher.fetchPairData(tokenA, tokenB);
         return pairDetails;

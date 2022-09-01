@@ -155,6 +155,6 @@ export function showPath(trade: Trade) {
     pathAddress.push(token.address);
   });
   pathSymbol = pathSymbol.slice(0, -2);
-  console.log(`${pathSymbol} ${JSON.stringify(pathAddress)}`);
-  return [pathSymbol, pathAddress];
+  return `${pathSymbol} ${JSON.stringify(pathAddress)}`;
+  // return [pathSymbol, pathAddress];
 }

@@ -1,6 +1,6 @@
 export const ALLOWED_LIQUIDATION = 0.5; //50% of a borrowed asset can be liquidated
 const HEALTH_FACTOR_MAX = 1; //liquidation can happen when less than 1
-export const BONUS_THRESHOLD = 0.1 * 10 ** 18; //in eth. A bonus below this will be ignored
+export const BONUS_THRESHOLD = 0.01 * 10 ** 18; //in eth. A bonus below this will be ignored
 export const FLASH_LOAN_FEE = 0.009;
 
 export type AaveLoanSummary = {
@@ -159,7 +159,7 @@ export function minBonus(loans: AaveLoanSummary[]): AaveLoanSummary[] {
     return loanProfit >= BONUS_THRESHOLD;
   });
   console.log(
-    `Found ${filteredLoans.length} loans with an ETH profit over 0.1`,
+    `Found ${filteredLoans.length} loans with a liquidatable loan over 0.01 ETH`,
   );
   return filteredLoans;
 }
