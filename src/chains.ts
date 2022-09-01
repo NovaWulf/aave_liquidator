@@ -9,7 +9,16 @@ type ChainTokenList = {
 function tokenList(chainId: ChainId) {
   const filteredTokens = chains['tokens'].filter((t) => t.chainId === chainId);
   return filteredTokens.reduce(
-    (obj, item) => ((obj[item.symbol] = item), obj),
+    (obj, item) => (
+      (obj[item.symbol] = new Token(
+        item.chainId,
+        item.address,
+        item.decimals,
+        item.symbol,
+        item.name,
+      )),
+      obj
+    ),
     {},
   );
 }
