@@ -1,5 +1,3 @@
-import { TOKEN_LIST } from './chains.js';
-
 export const ALLOWED_LIQUIDATION = 0.5; //50% of a borrowed asset can be liquidated
 const HEALTH_FACTOR_MAX = 1; //liquidation can happen when less than 1
 export const BONUS_THRESHOLD = 0.1 * 10 ** 18; //in eth. A bonus below this will be ignored
@@ -12,8 +10,10 @@ export type AaveLoanSummary = {
   maxBorrowedSymbol: string;
   maxBorrowedPrincipal: number;
   maxBorrowedPriceInEth: number;
+  maxBorrowedDecimals: number;
   maxCollateralBonus: number;
   maxCollateralPriceInEth: number;
+  maxCollateralDecimals: number;
 };
 
 export type AaveUser = {
@@ -62,9 +62,11 @@ export function parseUnhealthyLoans(users: AaveUser[]): AaveLoanSummary[] {
     let maxBorrowedSymbol: string;
     let maxBorrowedPrincipal = 0;
     let maxBorrowedPriceInEth = 0;
+    let maxBorrowedDecimals = 0;
     let maxCollateralSymbol: string;
     let maxCollateralBonus = 0;
     let maxCollateralPriceInEth = 0;
+    let maxCollateralDecimals = 0;
 
     // loop through all borrow and add up total borrowed in eth
     // keep track of the largest borrow
@@ -79,6 +81,7 @@ export function parseUnhealthyLoans(users: AaveUser[]): AaveLoanSummary[] {
         maxBorrowedSymbol = reserve.symbol;
         maxBorrowedPrincipal = principalBorrowed;
         maxBorrowedPriceInEth = priceInEth;
+        maxBorrowedDecimals = reserve.decimals;
       }
     });
 
@@ -109,10 +112,18 @@ export function parseUnhealthyLoans(users: AaveUser[]): AaveLoanSummary[] {
         maxCollateralSymbol = reserve.symbol;
         maxCollateralBonus = reserveLiquidationBonus;
         maxCollateralPriceInEth = priceInEth;
+        maxCollateralDecimals = reserve.decimals;
       }
     });
 
     const healthFactor = totalCollateralThreshold / totalBorrowed;
+
+    if (maxCollateralPriceInEth == 0) {
+      console.log(
+        `skipping userId: ${user.id} because collateral: ${maxCollateralSymbol} has a ETH price of 0`,
+      );
+      return; // skip this iteration
+    }
 
     if (healthFactor <= HEALTH_FACTOR_MAX) {
       unhealthy.push({
@@ -122,8 +133,10 @@ export function parseUnhealthyLoans(users: AaveUser[]): AaveLoanSummary[] {
         maxBorrowedSymbol: maxBorrowedSymbol,
         maxBorrowedPrincipal: maxBorrowedPrincipal,
         maxBorrowedPriceInEth: maxBorrowedPriceInEth,
+        maxBorrowedDecimals: maxBorrowedDecimals,
         maxCollateralBonus: maxCollateralBonus / 10000,
         maxCollateralPriceInEth: maxCollateralPriceInEth,
+        maxCollateralDecimals: maxCollateralDecimals,
       });
     }
   });
@@ -133,23 +146,20 @@ export function parseUnhealthyLoans(users: AaveUser[]): AaveLoanSummary[] {
 }
 
 // is the bonus on 50% of the biggest loan greater than .1 ETH?
-export function minBonus(loans: AaveLoanSummary[]) {
-  return loans.filter((loan) => {
+export function minBonus(loans: AaveLoanSummary[]): AaveLoanSummary[] {
+  const filteredLoans = loans.filter((loan) => {
     const liquidationAmount =
       loan.maxBorrowedPrincipal *
       ALLOWED_LIQUIDATION *
-      (loan.maxBorrowedPriceInEth /
-        10 ** TOKEN_LIST[loan.maxBorrowedSymbol].decimals);
+      (loan.maxBorrowedPriceInEth / 10 ** loan.maxBorrowedDecimals);
     const loanProfit = liquidationAmount * (loan.maxCollateralBonus - 1.0);
 
-    console.log('ETH Profit: ' + loanProfit / 10 ** 18);
+    // console.log('ETH Profit: ' + loanProfit / 10 ** 18);
 
     return loanProfit >= BONUS_THRESHOLD;
   });
-}
-
-// percent is represented as a number less than 1 ie 0.75 is equivalent to 75%
-// multiply base and percent and return a BigInt
-export function percentBigInt(base: bigint, percent: number): bigint {
-  return BigInt((base * BigInt(percent * 10000)) / 10000n);
+  console.log(
+    `Found ${filteredLoans.length} loans with an ETH profit over 0.1`,
+  );
+  return filteredLoans;
 }
