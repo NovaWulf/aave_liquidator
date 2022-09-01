@@ -145,7 +145,7 @@ describe('unhealthy loan above threshold', () => {
 });
 
 describe('unhealthy loan below threshold', () => {
-  it('does not have a bit enough bonus', () => {
+  it('does not have a big enough bonus', () => {
     const unhealthyLoan: AaveLoanSummary = {
       userId: '0xabc',
       healthFactor: 0.13119476140428013,
@@ -154,7 +154,7 @@ describe('unhealthy loan below threshold', () => {
       maxBorrowedPrincipal: 2.379851736894203e22,
       maxBorrowedPriceInEth: 542907290000000,
       maxBorrowedDecimals: 18,
-      maxCollateralBonus: 1.01,
+      maxCollateralBonus: 1.001,
       maxCollateralPriceInEth: 1000000000000000000,
       maxCollateralDecimals: 18,
     };

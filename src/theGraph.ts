@@ -78,10 +78,7 @@ export const getLoans = async function (
     });
 
     const data = (await response.json()) as any;
-    // console.log(data);
 
-    const totalLoans = data.data.users.length;
-    console.log('total loans: ' + totalLoans);
     userData.push(...data.data.users);
     count++;
   }
