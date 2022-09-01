@@ -5,6 +5,7 @@ import { setTokenList } from './chains.js';
 import { knownTokens, liquidationProfits } from './liquidations.js';
 import { getLoans } from './theGraph.js';
 import { getGas } from './utils/gas.js';
+import { sendLoanEmail } from './utils/mailer.js';
 dotenv.config();
 
 run();
@@ -23,6 +24,7 @@ async function run(): Promise<void> {
     const minBonusLoans = minBonus(unhealthyLoans);
     const knownTokenLoans = knownTokens(minBonusLoans);
     const profitableLoans = await liquidationProfits(knownTokenLoans);
+    sendLoanEmail(profitableLoans);
 
     profitableLoans.forEach((l) => console.log(l));
     await sleep(60000);
