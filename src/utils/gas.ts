@@ -39,3 +39,7 @@ export const getGas = async function () {
 export const gasCostToLiquidate = async function () {
   return BigInt(gasCost * GAS_USED_ESTIMATE);
 };
+
+export const gasCostInWei = function () {
+  return BigInt(gasCost * 10 ** 9);
+};
