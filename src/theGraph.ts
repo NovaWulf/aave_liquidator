@@ -11,31 +11,34 @@ const THE_GRAPH_URL_MAINNET =
 
 export const getLoans = async function (
   tryAmount: number,
+  maxLoops = 6,
   userId?: string,
 ): Promise<AaveUser[]> {
-  // let maxCount = 6;
+  const userData: AaveUser[] = [];
+
+  let count = 0;
+  let maxCount = maxLoops;
   const THE_GRAPH_URL =
     process.env.CHAIN == 'mainnet'
       ? THE_GRAPH_URL_MAINNET
       : THE_GRAPH_URL_KOVAN;
 
-  const count = 0;
   let userIdQuery = '';
-
   if (userId) {
     userIdQuery = `id: "${userId}",`;
-    // maxCount = 1;
+    maxCount = 1;
   }
 
-  const response: any = await fetch(THE_GRAPH_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      query: `
+  while (count < maxCount) {
+    const response: any = await fetch(THE_GRAPH_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        query: `
       query GET_LOANS {
         users(first:${tryAmount}, skip:${
-        tryAmount * count
-      }, orderBy: id, orderDirection: desc, where: {${userIdQuery}borrowedReservesCount_gt: 0}) {
+          tryAmount * count
+        }, orderBy: id, orderDirection: desc, where: {${userIdQuery}borrowedReservesCount_gt: 0}) {
           id
           borrowedReservesCount
           collateralReserve:reserves(where: {currentATokenBalance_gt: 0}) {
@@ -71,16 +74,16 @@ export const getLoans = async function (
           }
         }
       }`,
-    }),
-  });
+      }),
+    });
 
-  const data = (await response.json()) as any;
-  // console.log(data);
+    const data = (await response.json()) as any;
+    // console.log(data);
 
-  const totalLoans = data.data.users.length;
-  console.log('total loans: ' + totalLoans);
-  return data.data.users;
-  // const unhealthyLoans=parseUsers(res.data);
-  // if(unhealthyLoans.length>0) liquidationProfits(unhealthyLoans)
-  // if(total_loans>0) console.log(`Records:${total_loans} Unhealthy:${unhealthyLoans.length}`)
+    const totalLoans = data.data.users.length;
+    console.log('total loans: ' + totalLoans);
+    userData.push(...data.data.users);
+    count++;
+  }
+  return userData;
 };

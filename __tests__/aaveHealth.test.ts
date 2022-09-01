@@ -4,7 +4,7 @@ import { getLoans } from '../src/theGraph.js';
 
 describe('live loans', () => {
   it('calculates health within 1%', async () => {
-    const loans = await getLoans(100);
+    const loans = await getLoans(100, 1);
     const unhealthy = parseUnhealthyLoans(loans);
     console.log(unhealthy[0]);
 
