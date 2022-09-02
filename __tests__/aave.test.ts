@@ -154,7 +154,7 @@ describe('unhealthy loan below threshold', () => {
       maxBorrowedPrincipal: 2.379851736894203e22,
       maxBorrowedPriceInEth: 542907290000000,
       maxBorrowedDecimals: 18,
-      maxCollateralBonus: 1.001,
+      maxCollateralBonus: 1.0,
       maxCollateralPriceInEth: 1000000000000000000,
       maxCollateralDecimals: 18,
     };
