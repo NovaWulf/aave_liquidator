@@ -2,8 +2,6 @@
 import fetch from 'node-fetch';
 import { AaveUser } from './aave.js';
 
-console.log(process.env.CHAIN);
-
 const THE_GRAPH_URL_KOVAN =
   'https://api.thegraph.com/subgraphs/name/aave/protocol-v2-kovan';
 const THE_GRAPH_URL_MAINNET =
@@ -14,6 +12,8 @@ export const getLoans = async function (
   maxLoops = 6,
   userId?: string,
 ): Promise<AaveUser[]> {
+  console.log(process.env.CHAIN);
+
   const userData: AaveUser[] = [];
 
   let count = 0;
