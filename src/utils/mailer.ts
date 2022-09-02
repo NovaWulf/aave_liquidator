@@ -23,9 +23,11 @@ async function sendMail(body: string) {
 }
 
 export function sendLoanEmail(loans) {
-  const body = [
-    `Found ${loans.length} loans that should be profitable to liquidate:`,
-  ];
-  body.concat(loans);
-  sendMail(body.join('\r\n'));
+  if (loans.length > 0) {
+    const body = [
+      `Found ${loans.length} loans that should be profitable to liquidate:`,
+    ];
+    body.concat(loans);
+    sendMail(body.join('\r\n'));
+  }
 }
