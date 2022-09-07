@@ -14,11 +14,12 @@ run();
 async function run(): Promise<void> {
   console.log(`Fetching loans from: ${process.env.CHAIN}`);
 
-  await getGas(); // get this ahead of time, as the value is good for each loop
   setTokenList(); // relies on env vars so needs to be run at runtime
 
   /* eslint-disable no-constant-condition */
   while (true) {
+    await getGas(); // get this once per loop
+
     const users = await getLoans(1000);
     const unhealthyLoans = parseUnhealthyLoans(users);
     const minBonusLoans = minBonus(unhealthyLoans);
