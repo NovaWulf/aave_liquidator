@@ -141,7 +141,9 @@ async function liquidationProfit(loan: AaveLoanSummary) {
   const profitInEthAfterGas = profitInEth - gasFee;
   // console.log(`profitInEthAfterGas: ${profitInEthAfterGas}`);
 
-  if (profitInEthAfterGas <= 0) {
+  const BONUS_THRESHOLD = parseFloat(process.env.BONUS_THRESHOLD); //in eth. A bonus below this will be ignored
+
+  if (profitInEthAfterGas <= BONUS_THRESHOLD) {
     console.log('loan is not profitable to liquidate, skipping');
     return null;
   }
