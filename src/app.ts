@@ -18,20 +18,23 @@ async function run(): Promise<void> {
 
   /* eslint-disable no-constant-condition */
   while (true) {
-    await getGas(); // get this once per loop
-
-    const users = await getLoans(1000);
-    const unhealthyLoans = parseUnhealthyLoans(users);
-    const minBonusLoans = minBonus(unhealthyLoans);
-    const knownTokenLoans = knownTokens(minBonusLoans);
-    const profitableLoans = await liquidationProfits(knownTokenLoans);
-    sendLoanEmail(profitableLoans);
-
-    profitableLoans.forEach((l) => console.log(l));
-    await sleep(60000);
+    await loop();
   }
 }
 
 function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function loop() {
+  await getGas(); // get this once per loop
+  const users = await getLoans(1000);
+  const unhealthyLoans = parseUnhealthyLoans(users);
+  const minBonusLoans = minBonus(unhealthyLoans);
+  const knownTokenLoans = knownTokens(minBonusLoans);
+  const profitableLoans = await liquidationProfits(knownTokenLoans);
+  sendLoanEmail(profitableLoans);
+
+  profitableLoans.forEach((l) => console.log(l));
+  await sleep(60000);
 }
