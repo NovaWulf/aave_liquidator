@@ -67,7 +67,7 @@ contract LiquidateLoan is FlashLoanReceiverBase, Ownable {
         );
 
         //swap collateral from liquidate back to asset from flashloan to pay it off
-        swapToBarrowedAsset(collateral, assets[0], amountOutMin, swapPath);
+        swapToBarrowedAsset(collateral, amountOutMin, swapPath);
 
         //Pay to owner the balance after fees
         uint256 profit = calcProfits(
@@ -120,7 +120,6 @@ contract LiquidateLoan is FlashLoanReceiverBase, Ownable {
     //assumes the balance of the token is on the contract
     function swapToBarrowedAsset(
         address asset_from,
-        address asset_to,
         uint256 amountOutMin,
         address[] memory swapPath
     ) public {
