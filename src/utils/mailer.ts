@@ -22,12 +22,11 @@ async function sendMail(body: string) {
   console.log('Message sent: %s', info.response);
 }
 
-export function sendLoanEmail(loans) {
+export function sendLoanEmail(loans: string[][]) {
   if (loans.length > 0) {
     const body = [
       `Found ${loans.length} loans that should be profitable to liquidate:`,
     ];
-    body.concat(loans);
-    sendMail(body.join('\r\n'));
+    sendMail(body.concat(loans.flat()).join('\r\n'));
   }
 }

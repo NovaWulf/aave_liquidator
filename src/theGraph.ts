@@ -6,6 +6,8 @@ const THE_GRAPH_URL_KOVAN =
   'https://api.thegraph.com/subgraphs/name/aave/protocol-v2-kovan';
 const THE_GRAPH_URL_MAINNET =
   'https://api.thegraph.com/subgraphs/name/aave/protocol-v2';
+const THE_GRAPH_URL_OPTIMISM_RINKEBY_V3 =
+  'https://api.thegraph.com/subgraphs/name/aave/protocol-v3-arbitrum-rinkeby';
 
 export const getLoans = async function (
   tryAmount: number,
@@ -18,10 +20,6 @@ export const getLoans = async function (
 
   let count = 0;
   let maxCount = maxLoops;
-  const THE_GRAPH_URL =
-    process.env.CHAIN == 'mainnet'
-      ? THE_GRAPH_URL_MAINNET
-      : THE_GRAPH_URL_KOVAN;
 
   let userIdQuery = '';
   if (userId) {
@@ -30,7 +28,7 @@ export const getLoans = async function (
   }
 
   while (count < maxCount) {
-    const response: any = await fetch(THE_GRAPH_URL, {
+    const response: any = await fetch(getTheGraphUrl(), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -83,4 +81,18 @@ export const getLoans = async function (
     count++;
   }
   return userData;
+};
+
+const getTheGraphUrl = function () {
+  switch (process.env.CHAIN) {
+    case 'mainnet':
+      return THE_GRAPH_URL_MAINNET;
+    case 'kovan':
+      return THE_GRAPH_URL_KOVAN;
+    case 'optimism-rinkeby':
+      return THE_GRAPH_URL_OPTIMISM_RINKEBY_V3;
+
+    default:
+      return THE_GRAPH_URL_MAINNET;
+  }
 };

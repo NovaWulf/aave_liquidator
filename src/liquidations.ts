@@ -17,14 +17,14 @@ export const gasCostToLiquidate = function () {
 
 export async function liquidationProfits(
   loans: AaveLoanSummary[],
-): Promise<any[]> {
+): Promise<string[][]> {
   const results = await Promise.all(
     loans.map(async (loan) => {
       const profits = await liquidationProfit(loan);
       return profits;
     }),
   );
-  const profitableLoans = results.flat().filter((n) => n); //remove nulls
+  const profitableLoans = results.filter((n) => n && n.length); //remove nulls & empties
   console.log(`Found ${profitableLoans.length} profitable loans`);
 
   return profitableLoans;
@@ -46,7 +46,7 @@ export function knownTokens(loans: AaveLoanSummary[]): AaveLoanSummary[] {
   return result;
 }
 
-async function liquidationProfit(loan: AaveLoanSummary) {
+async function liquidationProfit(loan: AaveLoanSummary): Promise<string[]> {
   // console.log(loan);
   // console.log(TOKEN_LIST);
 
@@ -55,11 +55,11 @@ async function liquidationProfit(loan: AaveLoanSummary) {
 
   if (!TOKEN_LIST[loan.maxBorrowedSymbol]) {
     console.log(`unknown token: ${loan.maxBorrowedSymbol} `);
-    return null;
+    return [];
   }
   if (!TOKEN_LIST[loan.maxCollateralSymbol]) {
     console.log(`unknown token: ${loan.maxCollateralSymbol}`);
-    return null;
+    return [];
   }
 
   //flash loan fee
@@ -122,7 +122,7 @@ async function liquidationProfit(loan: AaveLoanSummary) {
   // console.log(`tokens after swap: ${minimumTokensAfterSwap}`);
   if (!bestTrade) {
     console.log("couldn't find trade, skipping ");
-    return null;
+    return [];
   }
 
   //total profits (bonus_after_swap - flashLoanCost).to_eth - gasFee
@@ -145,7 +145,7 @@ async function liquidationProfit(loan: AaveLoanSummary) {
 
   if (profitInEthAfterGas <= BONUS_THRESHOLD) {
     console.log('loan is not profitable to liquidate, skipping');
-    return null;
+    return [];
   }
 
   const result = [];
