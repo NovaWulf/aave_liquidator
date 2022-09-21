@@ -43,7 +43,7 @@ contract LiquidateLoan is FlashLoanReceiverBase, Ownable {
         address[] calldata assets,
         uint256[] calldata amounts,
         uint256[] calldata premiums,
-        address initiator,
+        address, /*initiator*/
         bytes calldata params
     ) external override returns (bool) {
         //collateral  the address of the token that we will be compensated in
@@ -102,7 +102,7 @@ contract LiquidateLoan is FlashLoanReceiverBase, Ownable {
         address _userToLiquidate,
         uint256 _amount,
         bool _receiveaToken
-    ) public {
+    ) private {
         require(
             IERC20(_liquidate_asset).approve(address(_lendingPool), _amount),
             'Approval error'
@@ -122,7 +122,7 @@ contract LiquidateLoan is FlashLoanReceiverBase, Ownable {
         address asset_from,
         uint256 amountOutMin,
         address[] memory swapPath
-    ) public {
+    ) private {
         IERC20 asset_fromToken;
         uint256 amountToTrade;
         uint256 deadline;
