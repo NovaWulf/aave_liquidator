@@ -9,6 +9,10 @@ env:
   INFURA_KEY: ${{ secrets.INFURA_KEY }}
   BONUS_THRESHOLD: 0.1
 
+defaults:
+  run:
+    working-directory: loadSearcher
+
 jobs:
   build:
     runs-on: ubuntu-latest
