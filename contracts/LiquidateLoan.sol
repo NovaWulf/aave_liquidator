@@ -16,11 +16,11 @@ import './Ownable.sol';
  *
  */
 contract LiquidateLoan is FlashLoanReceiverBase, Ownable {
-    ILendingPoolAddressesProvider provider;
-    IUniswapV2Router02 uniswapV2Router;
+    ILendingPoolAddressesProvider public provider;
+    IUniswapV2Router02 internal uniswapV2Router;
     using SafeMath for uint256;
 
-    address lendingPoolAddr;
+    address public lendingPoolAddr;
 
     event ErrorHandled(string stringFailure);
 
@@ -67,7 +67,7 @@ contract LiquidateLoan is FlashLoanReceiverBase, Ownable {
         );
 
         //swap collateral from liquidate back to asset from flashloan to pay it off
-        swapToBarrowedAsset(collateral, amountOutMin, swapPath);
+        swapToBorrowedAsset(collateral, amountOutMin, swapPath);
 
         //Pay to owner the balance after fees
         uint256 profit = calcProfits(
@@ -118,7 +118,7 @@ contract LiquidateLoan is FlashLoanReceiverBase, Ownable {
     }
 
     //assumes the balance of the token is on the contract
-    function swapToBarrowedAsset(
+    function swapToBorrowedAsset(
         address asset_from,
         uint256 amountOutMin,
         address[] memory swapPath
