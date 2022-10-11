@@ -23,6 +23,8 @@
   },
   "scripts": {
     "start": "node build/src/app.js",
+    "health": "node build/src/health.js",
+    "user": "node build/src/user.js",
     "clean": "rimraf coverage build tmp",
     "prebuild": "npm run lint",
     "build": "tsc -p tsconfig.json",
@@ -35,8 +37,11 @@
   },
   "author": "Nader Akhnoukh <iamnader@users.noreply.github.com>",
   "dependencies": {
+    "@aave/contract-helpers": "^1.7.0",
+    "@aave/math-utils": "^1.7.0",
     "@aave/protocol-js": "^4.3.0",
     "@uniswap/sdk": "^3.0.3",
+    "dayjs": "^1.11.5",
     "dotenv": "^16.0.1",
     "ethers": "^5.6.9",
     "node-fetch": "^2.6.7",
