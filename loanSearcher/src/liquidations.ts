@@ -67,12 +67,12 @@ async function liquidationProfit(loan: AaveLoanSummary): Promise<string[]> {
     BigInt(loan.maxBorrowedPrincipal),
     ALLOWED_LIQUIDATION,
   );
-  // console.log(
-  //   `amount of ${loan.maxBorrowedSymbol} to liquidate: ${amountToLiquidate}`,
-  // );
+  console.log(
+    `amount of ${loan.maxBorrowedSymbol} to liquidate: ${amountToLiquidate}`,
+  );
 
   const flashLoanCost = percentBigInt(amountToLiquidate, FLASH_LOAN_FEE);
-  // console.log(`flash loan cost in ${loan.maxBorrowedSymbol}: ${flashLoanCost}`);
+  console.log(`flash loan cost in ${loan.maxBorrowedSymbol}: ${flashLoanCost}`);
 
   //minimum amount of liquidated coins that will be paid out as profit
   const amountToLiquidateInEth = BigInt(
@@ -121,7 +121,9 @@ async function liquidationProfit(loan: AaveLoanSummary): Promise<string[]> {
   }
   // console.log(`tokens after swap: ${minimumTokensAfterSwap}`);
   if (!bestTrade) {
-    console.log("couldn't find trade, skipping ");
+    console.log(
+      `couldn't find trade from: ${loan.maxCollateralSymbol} -> ${loan.maxBorrowedSymbol}, skipping `,
+    );
     return [];
   }
 
@@ -144,15 +146,17 @@ async function liquidationProfit(loan: AaveLoanSummary): Promise<string[]> {
   const BONUS_THRESHOLD = parseFloat(process.env.BONUS_THRESHOLD); //in eth. A bonus below this will be ignored
 
   if (profitInEthAfterGas <= BONUS_THRESHOLD) {
-    console.log('loan is not profitable to liquidate, skipping');
+    console.log(
+      `loan is not profitable to liquidate at ${profitInEthAfterGas}, skipping`,
+    );
     return [];
   }
 
   const result = [];
 
   result.push('-------------------------------');
-  result.push(`- User ID:${loan.userId}`);
-  result.push(`- HealthFactor ${loan.healthFactor.toFixed(2)}`);
+  result.push(`- User ID: ${loan.userId}`);
+  result.push(`- HealthFactor: ${loan.healthFactor.toFixed(2)}`);
   result.push(
     `- User borrowed ${loan.maxBorrowedSymbol} with collateral of ${loan.maxCollateralSymbol}`,
   );
@@ -198,6 +202,19 @@ async function liquidationProfit(loan: AaveLoanSummary): Promise<string[]> {
       18,
     )} ETH`,
   );
+
+  result.push('Call Liquidate Contract executeFlashLoans with these params: ');
+  result.push(
+    `assetToLiquidate: ${TOKEN_LIST[loan.maxBorrowedSymbol].address}`,
+  );
+  result.push(`flashAmount: ${amountToLiquidate}`);
+  result.push(
+    `collateralAddress: ${TOKEN_LIST[loan.maxCollateralSymbol].address}`,
+  );
+  result.push(`userToLiquidate: ${loan.userId}`);
+  result.push(`amountOutMin: ${minimumTokensAfterSwap}`);
+  result.push(`swapPath: ${bestTrade ? showPath(bestTrade) : 'no path'}`);
+
   result.push('-------------------------------');
 
   // result.forEach((l) => console.log(l));
