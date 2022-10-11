@@ -9,78 +9,98 @@ const THE_GRAPH_URL_MAINNET =
 const THE_GRAPH_URL_OPTIMISM_RINKEBY_V3 =
   'https://api.thegraph.com/subgraphs/name/aave/protocol-v3-arbitrum-rinkeby';
 
+const aaveInternalQuery = `id
+borrowedReservesCount
+collateralReserve:reserves(where: {currentATokenBalance_gt: 0}) {
+  currentATokenBalance
+  reserve{
+    usageAsCollateralEnabled
+    reserveLiquidationThreshold
+    reserveLiquidationBonus
+    borrowingEnabled
+    utilizationRate
+    symbol
+    underlyingAsset
+    price {
+      priceInEth
+    }
+    decimals
+  }
+}
+borrowReserve: reserves(where: {currentTotalDebt_gt: 0}) {
+  currentTotalDebt
+  reserve{
+    usageAsCollateralEnabled
+    reserveLiquidationThreshold
+    borrowingEnabled
+    utilizationRate
+    symbol
+    underlyingAsset
+    price {
+      priceInEth
+    }
+    decimals
+  }
+}`;
+
 export const getLoans = async function (
   tryAmount: number,
   maxLoops = 6,
-  userId?: string,
 ): Promise<AaveUser[]> {
   console.log(process.env.CHAIN);
 
   const userData: AaveUser[] = [];
 
   let count = 0;
-  let maxCount = maxLoops;
-
-  let userIdQuery = '';
-  if (userId) {
-    userIdQuery = `id: "${userId}",`;
-    maxCount = 1;
-  }
-
-  while (count < maxCount) {
-    const response: any = await fetch(getTheGraphUrl(), {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        query: `
-      query GET_LOANS {
-        users(first:${tryAmount}, skip:${
-          tryAmount * count
-        }, orderBy: id, orderDirection: desc, where: {${userIdQuery}borrowedReservesCount_gt: 0}) {
-          id
-          borrowedReservesCount
-          collateralReserve:reserves(where: {currentATokenBalance_gt: 0}) {
-            currentATokenBalance
-            reserve{
-              usageAsCollateralEnabled
-              reserveLiquidationThreshold
-              reserveLiquidationBonus
-              borrowingEnabled
-              utilizationRate
-              symbol
-              underlyingAsset
-              price {
-                priceInEth
-              }
-              decimals
-            }
-          }
-          borrowReserve: reserves(where: {currentTotalDebt_gt: 0}) {
-            currentTotalDebt
-            reserve{
-              usageAsCollateralEnabled
-              reserveLiquidationThreshold
-              borrowingEnabled
-              utilizationRate
-              symbol
-              underlyingAsset
-              price {
-                priceInEth
-              }
-              decimals
-            }
-          }
-        }
-      }`,
-      }),
-    });
-
-    const data = (await response.json()) as any;
-
+  while (count < maxLoops) {
+    const query = `
+    query GET_LOANS {
+      users(first:${tryAmount}, skip:${
+      tryAmount * count
+    }, orderBy: id, orderDirection: desc, where: {borrowedReservesCount_gt: 0}) {
+        ${aaveInternalQuery}
+      }
+    }`;
+    const data = (await queryTheGraph(query)) as any;
     userData.push(...data.data.users);
     count++;
   }
   return userData;
+};
+
+export const getUserLoans = async function (
+  userId: string,
+  blockNumber?: number,
+): Promise<AaveUser[]> {
+  if (process.env.CHAIN != 'mainnet') {
+    console.log(process.env.CHAIN);
+  }
+
+  const userData: AaveUser[] = [];
+  const blockQuery = blockNumber ? `block: {number: ${blockNumber}}` : '';
+  const query = `
+  {
+    user(id: "${userId}", ${blockQuery}) {
+     ${aaveInternalQuery}
+    }
+  }`;
+
+  const data = (await queryTheGraph(query)) as any;
+
+  userData.push(data.data.user);
+
+  return userData;
+};
+
+const queryTheGraph = async (query: string) => {
+  const response: any = await fetch(getTheGraphUrl(), {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ query }),
+  });
+
+  const data = (await response.json()) as any;
+  return data;
 };
 
 const getTheGraphUrl = function () {
