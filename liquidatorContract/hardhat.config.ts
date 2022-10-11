@@ -1,6 +1,12 @@
 import { HardhatUserConfig } from "hardhat/config";
 import "@nomicfoundation/hardhat-toolbox";
 
+import * as dotenv from "dotenv";
+dotenv.config();
+
+const ALCHEMY_API_KEY = process.env.ALCHEMY_API_KEY;
+if (!ALCHEMY_API_KEY) throw new Error("ALCHEMY_API_KEY required");
+
 const config: HardhatUserConfig = {
   solidity: {
     compilers: [
@@ -23,6 +29,15 @@ const config: HardhatUserConfig = {
         },
       },
     ],
+  },
+  defaultNetwork: "hardhat",
+  networks: {
+    hardhat: {
+      forking: {
+        url: "https://eth-mainnet.g.alchemy.com/v2/" + ALCHEMY_API_KEY,
+        blockNumber: 14367536,
+      },
+    },
   },
 };
 
