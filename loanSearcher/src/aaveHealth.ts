@@ -1,5 +1,13 @@
-import { v2 } from '@aave/protocol-js';
 import fetch from 'node-fetch';
+
+// this is super nasty
+// this is trying to get es6 imports working with common modules AND jest with typescript.
+// this also relies on esModuleInterop in tsconfig
+import * as mathutils from '@aave/math-utils';
+const math_utils = mathutils.default ? mathutils.default : mathutils;
+const { formatUserSummary, formatReserves } = math_utils;
+
+import dayjs from 'dayjs';
 
 const subgraph_url = 'https://api.thegraph.com/subgraphs/name/aave/protocol-v2';
 
@@ -15,133 +23,142 @@ const execute = async (query: string) => {
   return data.data;
 };
 
-const getIncentives = async () => {
-  const query = `query{
-    incentivizedActions {
-      incentivesController {
-        rewardToken
-        rewardTokenSymbol
-        rewardTokenDecimals
-        precision
-        emissionEndTimestamp
-      }
-    }
-  }`;
-  return execute(query);
-};
+const getPoolReserveData = async (blockNumber: number) => {
+  const blockQuery = blockNumber ? `block: {number: ${blockNumber}}, ` : '';
 
-const getPoolReserveData = async () => {
-  const query = `query{
-    reserves {
+  const query = `
+  query{
+    reserves(
+      ${blockQuery}
+      where: { pool: "${process.env.AAVE_V2_LENDING_POOL_ADDRESS_PROVIDER}" }
+    ) {
       id
-      underlyingAsset
-      name
       symbol
+      name
       decimals
-      isActive
-      isFrozen
+      underlyingAsset
       usageAsCollateralEnabled
-      borrowingEnabled
-      stableBorrowRateEnabled
+      reserveFactor
       baseLTVasCollateral
-      optimalUtilisationRate
       averageStableRate
-      stableRateSlope1
-      stableRateSlope2
-      baseVariableBorrowRate
-      variableRateSlope1
-      variableRateSlope2
+      stableDebtLastUpdateTimestamp
       liquidityIndex
       reserveLiquidationThreshold
+      reserveLiquidationBonus
       variableBorrowIndex
-      aToken {
-        id
-      }
-      vToken {
-        id
-      }
-      sToken {
-        id
-      }
-      availableLiquidity
-      stableBorrowRate
+      variableBorrowRate
       liquidityRate
       totalPrincipalStableDebt
       totalScaledVariableDebt
-      reserveLiquidationBonus
-      variableBorrowRate
+      lastUpdateTimestamp
+      availableLiquidity
+      stableBorrowRate
+      totalLiquidity
       price {
         priceInEth
       }
-      lastUpdateTimestamp
-      stableDebtLastUpdateTimestamp
-      reserveFactor
-      aEmissionPerSecond
-      vEmissionPerSecond
-      sEmissionPerSecond
-      aTokenIncentivesIndex
-      vTokenIncentivesIndex
-      sTokenIncentivesIndex
-      aIncentivesLastUpdateTimestamp
-      vIncentivesLastUpdateTimestamp
-      sIncentivesLastUpdateTimestamp
     }
   }`;
 
-  return execute(query);
+  const reserves = await execute(query);
+
+  const reservesArray = reserves.reserves.map((reserve) => {
+    return {
+      ...reserve,
+      priceInMarketReferenceCurrency: reserve.price.priceInEth,
+      eModeCategoryId: 0,
+      borrowCap: '',
+      supplyCap: '',
+      debtCeiling: '',
+      debtCeilingDecimals: 0,
+      isolationModeTotalDebt: '',
+      eModeLtv: 0,
+      eModeLiquidationThreshold: 0,
+      eModeLiquidationBonus: 0,
+    };
+  });
+  // console.log(reservesArray);
+
+  return reservesArray;
 };
 
-const getUserReserveData = async (user: string) => {
+const getUserReserveData = async (user: string, blockNumber: number) => {
+  const blockQuery = blockNumber ? `block: {number: ${blockNumber}}, ` : '';
+
   const query = `{
-    userReserves (where: { user: "${user.toLowerCase()}"}){
-      scaledATokenBalance
-      reserve {
-        id
+    userReserves (
+      ${blockQuery}
+      where: { pool: "${
+        process.env.AAVE_V2_LENDING_POOL_ADDRESS_PROVIDER
+      }", user: "${user.toLowerCase()}"}){
+      reserve{
         underlyingAsset
-        name
-        symbol
-        decimals
-        liquidityRate
-        reserveLiquidationBonus
-        lastUpdateTimestamp
       }
+      scaledATokenBalance
       usageAsCollateralEnabledOnUser
       stableBorrowRate
-      stableBorrowLastUpdateTimestamp
-      principalStableDebt
       scaledVariableDebt
-      variableBorrowIndex
-      aTokenincentivesUserIndex
-      vTokenincentivesUserIndex
-      sTokenincentivesUserIndex
+      principalStableDebt
+      stableBorrowLastUpdateTimestamp
     }
   }`;
 
+  const userReserves = await execute(query);
+  const userReservesArray = userReserves.userReserves.map((userReserve) => {
+    return {
+      ...userReserve,
+      underlyingAsset: userReserve.reserve.underlyingAsset,
+    };
+  });
+  // console.log(userReservesArray);
+
+  return userReservesArray;
+};
+
+const getUsdPriceEth = async (blockNumber: number) => {
+  const blockQuery = blockNumber ? `(block: {number: ${blockNumber}})` : '';
+  // console.log(blockQuery);
+
+  const query = `{
+    priceOracles${blockQuery} {
+      usdPriceEth
+    }
+  }`;
   return execute(query);
 };
 
-// Fetch ethPriceUSD from GQL Subscription/query
+export const getUserHealthFactor = async (
+  userId: string,
+  blockNumber?: number,
+) => {
+  const reservesArray = await getPoolReserveData(blockNumber);
+  const userReservesArray = await getUserReserveData(userId, blockNumber);
+  const prices = await getUsdPriceEth(blockNumber);
+  // console.log(prices);
 
-export const getUserHealthFactor = async (userId: string) => {
-  const poolReservesData = (await getPoolReserveData()).reserves;
-  const rawUserReserves = (await getUserReserveData(userId)).userReserves;
-  const incentives = (await getIncentives()).incentivizedActions[0];
+  const usdPriceInEth = prices.priceOracles[0].usdPriceEth;
 
-  // console.log(rawUserReserves);
+  const currentTimestamp = dayjs().unix();
+  const marketReferenceCurrencyPriceInUsd = (
+    1 /
+    (usdPriceInEth / 10 ** 18)
+  ).toString();
+  const marketReferenceCurrencyDecimals = 18;
 
-  const userSummary = v2.formatUserSummaryData(
-    poolReservesData,
-    rawUserReserves,
-    userId,
-    ((1 / 1900) * 10) ^ 18,
-    Math.floor(Date.now() / 1000),
-    {
-      rewardTokenAddress: incentives.rewardToken,
-      rewardTokenDecimals: incentives.rewardTokenDecimals,
-      incentivePrecision: incentives.precision,
-      emissionEndTimestamp: incentives.emissionEndTimestamp,
-      rewardTokenPriceEth: '57237766000000000', // hardcoded, but doesn't effect health factor
-    },
-  );
+  const formattedPoolReserves = formatReserves({
+    reserves: reservesArray,
+    currentTimestamp,
+    marketReferenceCurrencyDecimals: marketReferenceCurrencyDecimals,
+    marketReferencePriceInUsd: marketReferenceCurrencyPriceInUsd,
+  });
+
+  const userSummary = formatUserSummary({
+    currentTimestamp,
+    marketReferencePriceInUsd: marketReferenceCurrencyPriceInUsd,
+    marketReferenceCurrencyDecimals: marketReferenceCurrencyDecimals,
+    userReserves: userReservesArray,
+    formattedReserves: formattedPoolReserves,
+    userEmodeCategoryId: 0,
+  });
   return userSummary;
 };
