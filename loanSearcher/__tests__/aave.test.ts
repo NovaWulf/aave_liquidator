@@ -1,6 +1,24 @@
-import { AaveLoanSummary, minBonus, parseUnhealthyLoans } from '../src/aave.js';
+import {
+  AaveLoanSummary,
+  mapLoans,
+  minBonus,
+  parseUnhealthyLoans,
+} from '../src/aave.js';
 
 describe('mocked healthy loan', () => {
+  const mappedLoan = {
+    userId: '0xffff8941130157a0153fb5be2618b257f28d3b55',
+    healthFactor: 1.311947614042801,
+    maxCollateralSymbol: 'WETH',
+    maxBorrowedSymbol: 'DAI',
+    maxBorrowedPrincipal: 2.379851736894203e22,
+    maxBorrowedPriceInEth: 542907290000000,
+    maxBorrowedDecimals: 18,
+    maxCollateralBonus: 1.05,
+    maxCollateralPriceInEth: 1000000000000000000,
+    maxCollateralDecimals: 18,
+  };
+
   const user = {
     id: '0xffff8941130157a0153fb5be2618b257f28d3b55',
     borrowedReservesCount: 2,
@@ -55,8 +73,13 @@ describe('mocked healthy loan', () => {
       },
     ],
   };
-  it('returns loan count', () => {
-    const unhealthy = parseUnhealthyLoans([user]);
+
+  it('maps correctly', () => {
+    expect(mapLoans([user])[0]).toEqual(mappedLoan);
+  });
+
+  it('returns loan count', async () => {
+    const unhealthy = await parseUnhealthyLoans([mappedLoan]);
     expect(unhealthy.length).toEqual(0);
   });
 });
@@ -117,8 +140,8 @@ describe('mocked unhealthy loan', () => {
     ],
   };
 
-  it('returns loan count', () => {
-    const unhealthy = parseUnhealthyLoans([user]);
+  it('returns loan count', async () => {
+    const unhealthy = await parseUnhealthyLoans(mapLoans([user]));
 
     expect(unhealthy.length).toEqual(1);
   });

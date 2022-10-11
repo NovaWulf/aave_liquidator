@@ -1,6 +1,6 @@
 import * as dotenv from 'dotenv';
 
-import { minBonus, parseUnhealthyLoans } from './aave.js';
+import { mapLoans, minBonus, parseUnhealthyLoans } from './aave.js';
 import { setTokenList } from './chains.js';
 import { knownTokens, liquidationProfits } from './liquidations.js';
 import { getLoans } from './theGraph.js';
@@ -29,7 +29,8 @@ function sleep(ms: number) {
 async function loop() {
   await getGas(); // get this once per loop
   const users = await getLoans(1000);
-  const unhealthyLoans = parseUnhealthyLoans(users);
+  const mappedLoans = mapLoans(users);
+  const unhealthyLoans = await parseUnhealthyLoans(mappedLoans);
   const minBonusLoans = minBonus(unhealthyLoans);
   const knownTokenLoans = knownTokens(minBonusLoans);
   const profitableLoans = await liquidationProfits(knownTokenLoans);
