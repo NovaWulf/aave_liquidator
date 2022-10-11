@@ -44,6 +44,7 @@ describe("LiquidateLoan", function () {
         AAVE_ABI,
         AAVE_V2_LENDING_POOL_ADDRESS_PROVIDER
       );
+
       expect(contract.flashLoan).to.exist;
     });
 
@@ -57,29 +58,80 @@ describe("LiquidateLoan", function () {
     });
   });
 
-  describe("Liquidation", () => {
-    it("should succeed", async () => {
-      const assetToLiquidate = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48";
-      const flashAmount = 1622238100n;
-      const collateralAddress = "0x7Fc66500c84A76Ad7e9c93437bFc5Ac33E2DDaE9";
-      const userToLiquidate = "0xf37680f16b92747ee8537a7e2ccb0e51a7c52a64";
-      const amountOutMin = 22268000000000000000n;
-      const swapPath = [
-        "0x7Fc66500c84A76Ad7e9c93437bFc5Ac33E2DDaE9",
-        "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
-        "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
-      ];
+  describe("liquidating old transaction", () => {
+    // this user was liquidated in block: 14367537, so we should use 14367536 in hardhat config
+    //https://etherscan.io/tx/0xf0551ea0bf9b47dc506845b75aaf83aac06ecbfd0da54237d37fb7297e28d8e9#eventlog
+    const assetToLiquidate = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2";
+    const collateralAddress = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2";
+    const userToLiquidate = "0x8a8967428b96b9c64d5f578b25ab20c378abb896";
+    const amountOutMin = 30966379588568000201n;
 
+    const flashAmount = 30001631141639593984n;
+    const swapPath = [
+      "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
+      "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+      "0x6B175474E89094C44Da98b954EedeAC495271d0F",
+      "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
+    ];
+
+    it("collateral should exist", async () => {
+      const { owner } = await loadFixture(deployLiquidateLoanFixture);
+
+      const contract = await ethers.getContractAt(ERC20_ABI, collateralAddress);
+      const ownerCollateralBalance = await contract.balanceOf(owner.address);
+      expect(ownerCollateralBalance).to.equal(0);
+    });
+
+    it("borrow asset should exist", async () => {
+      const { owner } = await loadFixture(deployLiquidateLoanFixture);
+
+      const contract = await ethers.getContractAt(ERC20_ABI, assetToLiquidate);
+      const ownerBorrowBalance = await contract.balanceOf(owner.address);
+      expect(ownerBorrowBalance).to.equal(0);
+    });
+
+    it("ensure user exists", async () => {
+      const balance = await ethers.provider.getBalance(userToLiquidate);
+      expect(balance).to.be.gt(0);
+    });
+
+    it("gets health factor", async () => {
+      const { owner } = await loadFixture(deployLiquidateLoanFixture);
+
+      const contract = await ethers.getContractAt(
+        "ILendingPoolAddressesProvider",
+        AAVE_V2_LENDING_POOL_ADDRESS_PROVIDER
+      );
+
+      const lendingPool = await contract.getLendingPool();
+      // console.log(lendingPool);
+
+      const lpContract = await ethers.getContractAt(
+        "ILendingPool",
+        lendingPool
+      );
+      // console.log(lpContract);
+
+      const user = await lpContract.getUserAccountData(userToLiquidate);
+      // console.log(user);
+
+      const { healthFactor } = user;
+
+      const oneEther = ethers.utils.parseEther("1.0");
+
+      const healthFactorFloat =
+        Number(healthFactor.mul(100).div(1000000000000000000n)) / 100;
+      console.log(healthFactorFloat);
+
+      expect(healthFactorFloat).to.be.gt(0);
+    });
+
+    it("should succeed", async () => {
       const { liquidateLoan, owner } = await loadFixture(
         deployLiquidateLoanFixture
       );
-
-      const COLLATERAL_ASSET = new ethers.Contract(
-        collateralAddress,
-        ERC20_ABI,
-        ethers.provider
-      );
-      expect(await COLLATERAL_ASSET.balanceOf(owner.address).to.equal(0));
+      const contract = await ethers.getContractAt(ERC20_ABI, collateralAddress);
+      expect(await contract.balanceOf(owner.address)).to.eq(0);
 
       expect(
         await liquidateLoan.executeFlashLoans(
@@ -92,73 +144,10 @@ describe("LiquidateLoan", function () {
         )
       ).not.to.be.reverted;
 
-      expect(await COLLATERAL_ASSET.balanceOf(owner.address).to.be.gt(0));
+      const balance = await contract.balanceOf(owner.address);
+      console.log(balance);
+
+      expect(balance).to.be.gt(0);
     });
   });
-
-  // describe("Withdrawals", function () {
-  //   describe("Validations", function () {
-  //     it("Should revert with the right error if called too soon", async function () {
-  //       const { lock } = await loadFixture(deployOneYearLockFixture);
-
-  //       await expect(lock.withdraw()).to.be.revertedWith(
-  //         "You can't withdraw yet"
-  //       );
-  //     });
-
-  //     it("Should revert with the right error if called from another account", async function () {
-  //       const { lock, unlockTime, otherAccount } = await loadFixture(
-  //         deployOneYearLockFixture
-  //       );
-
-  //       // We can increase the time in Hardhat Network
-  //       await time.increaseTo(unlockTime);
-
-  //       // We use lock.connect() to send a transaction from another account
-  //       await expect(lock.connect(otherAccount).withdraw()).to.be.revertedWith(
-  //         "You aren't the owner"
-  //       );
-  //     });
-
-  //     it("Shouldn't fail if the unlockTime has arrived and the owner calls it", async function () {
-  //       const { lock, unlockTime } = await loadFixture(
-  //         deployOneYearLockFixture
-  //       );
-
-  //       // Transactions are sent using the first signer by default
-  //       await time.increaseTo(unlockTime);
-
-  //       await expect(lock.withdraw()).not.to.be.reverted;
-  //     });
-  //   });
-
-  //   describe("Events", function () {
-  //     it("Should emit an event on withdrawals", async function () {
-  //       const { lock, unlockTime, lockedAmount } = await loadFixture(
-  //         deployOneYearLockFixture
-  //       );
-
-  //       await time.increaseTo(unlockTime);
-
-  //       await expect(lock.withdraw())
-  //         .to.emit(lock, "Withdrawal")
-  //         .withArgs(lockedAmount, anyValue); // We accept any value as `when` arg
-  //     });
-  //   });
-
-  //   describe("Transfers", function () {
-  //     it("Should transfer the funds to the owner", async function () {
-  //       const { lock, unlockTime, lockedAmount, owner } = await loadFixture(
-  //         deployOneYearLockFixture
-  //       );
-
-  //       await time.increaseTo(unlockTime);
-
-  //       await expect(lock.withdraw()).to.changeEtherBalances(
-  //         [owner, lock],
-  //         [lockedAmount, -lockedAmount]
-  //       );
-  //     });
-  //   });
-  // });
 });
