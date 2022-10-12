@@ -32,6 +32,9 @@ jobs:
         if: failure()
         uses: rtCamp/action-slack-notify@v2
         env:
+          SLACK_USERNAME: "Aave Liquidator Bot"
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
           SLACK_COLOR: ${{ job.status }}
+          SLACK_FOOTER: "CI Failed"
+          SLACK_ICON: https://ca.slack-edge.com/T030RM510F3-U03P463RU95-1f115892cbd1-72
       - run: npm run build --if-present
