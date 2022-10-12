@@ -8,6 +8,7 @@ env:
   CHAIN: ${{ secrets.CHAIN }}
   INFURA_KEY: ${{ secrets.INFURA_KEY }}
   BONUS_THRESHOLD: 0.1
+  AAVE_V2_LENDING_POOL_ADDRESS_PROVIDER: 0xb53c1a33016b2dc2ff3653530bff1848a515c8c5
 
 defaults:
   run:
@@ -18,7 +19,12 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 16
+          cache: "npm"
+          cache-dependency-path: subdir/package-lock.json
       - run: npm ci --no-audit
       - run: npm run lint --if-present
       - run: npm test
