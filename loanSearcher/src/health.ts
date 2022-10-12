@@ -12,7 +12,7 @@ async function run(): Promise<void> {
     process.env.TEST_USER_TO_LIQUIDATE,
     parseInt(process.env.TEST_BLOCK_NUMBER),
   );
-  console.log(hf);
+  // console.log(hf);
 
   console.log('Health Factor: ' + hf.healthFactor);
 }
