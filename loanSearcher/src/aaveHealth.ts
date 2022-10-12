@@ -4,11 +4,9 @@ import fetch from 'node-fetch';
 // this is trying to get es6 imports working with common modules AND jest with typescript.
 // this also relies on esModuleInterop in tsconfig
 import * as mathutils from '@aave/math-utils';
-console.log('checking!');
-console.log(Object.prototype.hasOwnProperty.call(mathutils, 'default'));
 
 const math_utils = Object.prototype.hasOwnProperty.call(mathutils, 'default')
-  ? mathutils.default
+  ? mathutils['default']
   : mathutils;
 const { formatUserSummary, formatReserves } = math_utils;
 
