@@ -28,12 +28,20 @@ jobs:
       - run: npm ci --no-audit
       - run: npm run lint --if-present
       - run: npm test
-      - name: Slack Notification
-        uses: rtCamp/action-slack-notify@v2
-        env:
-          SLACK_USERNAME: "Aave Liquidator Bot"
-          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
-          SLACK_COLOR: ${{ job.status }}
-          SLACK_FOOTER: "CI Failed"
-          SLACK_ICON: https://ca.slack-edge.com/T030RM510F3-U03P463RU95-1f115892cbd1-72
       - run: npm run build --if-present
+  slack-status:
+    if: always()
+    name: "Aave Liquidator Bot"
+    needs:
+      - build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Slack Workflow Notification
+        uses: Gamesight/slack-workflow-status@master
+        with:
+          repo_token: ${{secrets.GITHUB_TOKEN}}
+          slack_webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+          include_commit_message: true
+          include_jobs: true
+          icon_url: https://ca.slack-edge.com/T030RM510F3-U03P463RU95-1f115892cbd1-72
