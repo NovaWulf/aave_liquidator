@@ -25,13 +25,13 @@ jobs:
           node-version: 16
           cache: "npm"
           cache-dependency-path: loanSearcher/package-lock.json
+      - run: npm ci --no-audit
+      - run: npm run lint --if-present
+      - run: npm test
       - name: Slack Notification
         if: failure()
         uses: rtCamp/action-slack-notify@v2
         env:
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
           SLACK_COLOR: ${{ job.status }}
-      - run: npm ci --no-audit
-      - run: npm run lint --if-present
-      - run: npm test
       - run: npm run build --if-present
