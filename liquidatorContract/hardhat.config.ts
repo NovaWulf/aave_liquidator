@@ -4,8 +4,9 @@ import "@nomicfoundation/hardhat-toolbox";
 import * as dotenv from "dotenv";
 dotenv.config();
 
-const ALCHEMY_API_KEY = process.env.ALCHEMY_API_KEY;
+const { ALCHEMY_API_KEY, MAINNET_PRIVATE_KEY } = process.env;
 if (!ALCHEMY_API_KEY) throw new Error("ALCHEMY_API_KEY required");
+if (!MAINNET_PRIVATE_KEY) throw new Error("MAINNET_PRIVATE_KEY required");
 
 const config: HardhatUserConfig = {
   solidity: {
@@ -37,6 +38,10 @@ const config: HardhatUserConfig = {
         url: "https://eth-mainnet.g.alchemy.com/v2/" + ALCHEMY_API_KEY,
         blockNumber: 14367536,
       },
+    },
+    mainnet: {
+      url: "https://eth-mainnet.g.alchemy.com/v2/" + ALCHEMY_API_KEY,
+      accounts: [MAINNET_PRIVATE_KEY],
     },
   },
 };

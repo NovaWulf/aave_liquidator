@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity 0.6.12;
 
-import {FlashLoanReceiverBase} from './FlashLoanReceiverBase.sol';
-import {ILendingPool, ILendingPoolAddressesProvider, IERC20, IUniswapV2Router02} from './Interfaces.sol';
-import {SafeMath} from './Libraries.sol';
-import './Ownable.sol';
+import {FlashLoanReceiverBase} from "./FlashLoanReceiverBase.sol";
+import {ILendingPool, ILendingPoolAddressesProvider, IERC20, IUniswapV2Router02} from "./Interfaces.sol";
+import {SafeMath} from "./Libraries.sol";
+import "./Ownable.sol";
 
 // import "https://github.com/sushiswap/sushiswap/blob/master/contracts/uniswapv2/interfaces/IUniswapV2Router02.sol";
 // import 'https://github.com/Uniswap/uniswap-v2-periphery/blob/master/contracts/interfaces/IUniswapV2Router02.sol';
@@ -76,7 +76,7 @@ contract LiquidateLoan is FlashLoanReceiverBase, Ownable {
             premiums[0]
         );
 
-        require(profit > 0, 'No profit');
+        require(profit > 0, "No profit");
         IERC20(assets[0]).transfer(owner(), profit);
 
         // Approve the LendingPool contract allowance to *pull* the owed amount
@@ -93,7 +93,7 @@ contract LiquidateLoan is FlashLoanReceiverBase, Ownable {
         uint256 _loanAmount,
         uint256 _loanFee
     ) private pure returns (uint256) {
-        return _balance.sub(_loanAmount.add(_loanFee), 'no profits to return');
+        return _balance.sub(_loanAmount.add(_loanFee), "no profits to return");
     }
 
     function liquidateLoan(
@@ -105,7 +105,7 @@ contract LiquidateLoan is FlashLoanReceiverBase, Ownable {
     ) private {
         require(
             IERC20(_liquidate_asset).approve(address(_lendingPool), _amount),
-            'Approval error'
+            "Approval error"
         );
 
         _lendingPool.liquidationCall(
