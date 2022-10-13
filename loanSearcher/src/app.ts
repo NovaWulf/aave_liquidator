@@ -1,11 +1,10 @@
 import * as dotenv from 'dotenv';
 
-import { mapLoans, minBonus, parseUnhealthyLoans } from './aave.js';
 import { setTokenList } from './chains.js';
-import { knownTokens, liquidationProfits } from './liquidations.js';
+import { runLiquidation } from './runLiquidation.js';
+import { findProfitableLoan } from './searcher.js';
 import { getLoans } from './theGraph.js';
 import { getGas } from './utils/gas.js';
-import { sendLoanEmail } from './utils/mailer.js';
 dotenv.config();
 
 run();
@@ -28,14 +27,13 @@ function sleep(ms: number) {
 
 async function loop() {
   await getGas(); // get this once per loop
-  const users = await getLoans(1000);
-  const mappedLoans = mapLoans(users);
-  const unhealthyLoans = await parseUnhealthyLoans(mappedLoans);
-  const minBonusLoans = minBonus(unhealthyLoans);
-  const knownTokenLoans = knownTokens(minBonusLoans);
-  const profitableLoans = await liquidationProfits(knownTokenLoans);
-  sendLoanEmail(profitableLoans);
 
-  profitableLoans.forEach((l) => console.log(l));
+  const userLoans = await getLoans(1000);
+  const loan = await findProfitableLoan(userLoans);
+
+  if (process.env.RUN_LIQUIDATIONS) {
+    runLiquidation(loan);
+  }
+
   await sleep(60000);
 }
