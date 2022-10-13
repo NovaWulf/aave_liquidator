@@ -14,6 +14,7 @@
     "eslint": "~8.16",
     "eslint-config-prettier": "~8.5",
     "eslint-plugin-jest": "~26.2",
+    "ethereum-abi-types-generator": "^1.3.2",
     "jest": "~28.1",
     "prettier": "~2.6",
     "rimraf": "~3.0",
@@ -23,6 +24,7 @@
   },
   "scripts": {
     "start": "node build/src/app.js",
+    "hello": "node build/src/main.js",
     "health": "node build/src/health.js",
     "user": "node build/src/user.js",
     "clean": "rimraf coverage build tmp",
