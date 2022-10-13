@@ -47,7 +47,7 @@ export const getLoans = async function (
   tryAmount: number,
   maxLoops = 6,
 ): Promise<AaveUser[]> {
-  console.log(process.env.CHAIN);
+  // console.log(process.env.CHAIN);
 
   const userData: AaveUser[] = [];
 

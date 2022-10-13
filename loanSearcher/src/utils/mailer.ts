@@ -1,6 +1,6 @@
 import nodemailer from 'nodemailer';
 
-async function sendMail(body: string) {
+export async function sendMail(body: string) {
   const transporter = nodemailer.createTransport({
     host: 'smtp.office365.com',
     port: 587,
@@ -14,7 +14,7 @@ async function sendMail(body: string) {
   });
 
   const info = await transporter.sendMail({
-    from: '"Aave Luiquidator" <reports@novawulf.io>',
+    from: '"Aave Liquidator" <reports@novawulf.io>',
     to: process.env.NOTIFICATIONS_EMAIL,
     subject: 'Liquidatable Loan',
     text: body,
@@ -22,7 +22,7 @@ async function sendMail(body: string) {
   console.log('Message sent: %s', info.response);
 }
 
-export function sendLoanEmail(loans: string[][]) {
+export function sendLoanEmail(loans: string[]) {
   if (loans.length > 0) {
     const body = [
       `Found ${loans.length} loans that should be profitable to liquidate:`,

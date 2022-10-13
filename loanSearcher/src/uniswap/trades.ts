@@ -158,3 +158,7 @@ export function showPath(trade: Trade) {
   return `${pathSymbol} ${JSON.stringify(pathAddress)}`;
   // return [pathSymbol, pathAddress];
 }
+
+export function getPathAddresses(trade: Trade): string[] {
+  return trade.route.path.map((token) => token.address);
+}
