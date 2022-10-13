@@ -1,14 +1,7 @@
 import fetch from 'node-fetch';
 
-// this is super nasty
-// this is trying to get es6 imports working with common modules AND jest with typescript.
-// this also relies on esModuleInterop in tsconfig
-import * as mathutils from '@aave/math-utils';
-
-const math_utils = Object.prototype.hasOwnProperty.call(mathutils, 'default')
-  ? mathutils['default']
-  : mathutils;
-const { formatUserSummary, formatReserves } = math_utils;
+import mathutils from '@aave/math-utils';
+const { formatUserSummary, formatReserves } = mathutils;
 
 import dayjs from 'dayjs';
 

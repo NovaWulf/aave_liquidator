@@ -1,10 +1,11 @@
 import { Delays, greeter } from '../src/main.js';
+import { jest } from '@jest/globals';
 
 describe('greeter function', () => {
   const name = 'John';
   let hello: string;
 
-  let timeoutSpy: jest.SpyInstance;
+  let timeoutSpy; //: jest.SpyInstance;
 
   // Act before assertions
   beforeAll(async () => {
