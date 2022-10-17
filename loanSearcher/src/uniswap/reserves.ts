@@ -1,5 +1,6 @@
 import { ChainId, Fetcher, Pair, Token } from '@uniswap/sdk';
 import { wrappedCurrency } from './trades.js';
+import { provider } from '../utils/alchemy.js';
 
 export async function usePairReserves(
   currencies: [Token | undefined, Token | undefined][],
@@ -25,7 +26,11 @@ async function getReserves(tokens: [Token, Token][]): Promise<Pair[]> {
         return null;
       }
       try {
-        const pairDetails = await Fetcher.fetchPairData(tokenA, tokenB);
+        const pairDetails = await Fetcher.fetchPairData(
+          tokenA,
+          tokenB,
+          provider(),
+        );
         return pairDetails;
       } catch (e) {
         return null;
