@@ -126,12 +126,10 @@ describe('#liquidationProfit', () => {
     collateralAddress: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
     flashAmount: 30001631141639593984n,
     profitInEthAfterGas: expect.any(BigInt),
-    swapPath: [
+    swapPath: expect.arrayContaining([
       '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
-      '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
-      '0xdAC17F958D2ee523a2206206994597C13D831ec7',
       '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
-    ],
+    ]),
     userToLiquidate: '0x8a8967428b96b9c64d5f578b25ab20c378abb896',
   };
 
