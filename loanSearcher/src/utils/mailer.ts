@@ -1,6 +1,6 @@
 import nodemailer from 'nodemailer';
 
-export async function sendMail(body: string) {
+export async function sendMail(body: string): Promise<void> {
   const transporter = nodemailer.createTransport({
     host: 'smtp.office365.com',
     port: 587,
@@ -26,7 +26,7 @@ export async function sendMail(body: string) {
   console.log('Message sent: %s', info.response);
 }
 
-export function sendLoanEmail(loans: string[]) {
+export function sendLoanEmail(loans: string[]): void {
   if (loans.length > 0) {
     const body = [
       `Found ${loans.length} loans that should be profitable to liquidate:`,

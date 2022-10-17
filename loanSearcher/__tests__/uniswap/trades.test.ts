@@ -12,30 +12,5 @@ describe('#bestTrade', () => {
   it('finds a trade', async () => {
     const bestTrade = await useTradeExactIn(tokenAmountIn, tokenOut);
     expect(bestTrade).toBeTruthy();
-
-    // console.log(`useTradeExactIn path: ${showPath(bestTrade)}`);
-    // console.log(`useTradeExactIn amountOut: ${showPath(bestTrade)}`);
-    // const { numerator, denominator } = bestTrade.outputAmount;
-
-    // JSON.stringify(bestTrade, null, 2);
-    // const minimumTokensAfterSwap =
-    //   (BigInt(String(numerator)) * BigInt(10 ** 18)) /
-    //   BigInt(String(denominator));
-    // console.log(`useTradeExactIn tokens out: ${minimumTokensAfterSwap}`);
   });
-
-  // it('#simpleTrade', async () => {
-  //   const bestTrade = await simpleTrade(tokenAmountIn, tokenOut);
-  //   expect(bestTrade).toBeTruthy();
-
-  //   console.log(`simple path: ${showPath(bestTrade)}`);
-  //   console.log(`simple amountOut: ${showPath(bestTrade)}`);
-  //   const { numerator, denominator } = bestTrade.outputAmount;
-
-  //   // JSON.stringify(bestTrade, null, 2);
-  //   const minimumTokensAfterSwap =
-  //     (BigInt(String(numerator)) * BigInt(10 ** 18)) /
-  //     BigInt(String(denominator));
-  //   console.log(`simple tokens out: ${minimumTokensAfterSwap}`);
-  // });
 });

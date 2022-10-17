@@ -1,4 +1,4 @@
-import { ethers } from 'ethers';
+import { BigNumberish, ethers } from 'ethers';
 
 export function provider(): ethers.providers.BaseProvider {
   const { ALCHEMY_API_KEY, LOCALHOST_PROVIDER } = process.env;
@@ -19,4 +19,10 @@ export function signer(): ethers.Wallet {
   if (!MAINNET_PRIVATE_KEY) throw new Error('MAINNET_PRIVATE_KEY required');
 
   return new ethers.Wallet(MAINNET_PRIVATE_KEY, provider());
+}
+
+export async function getGasPrice(): Promise<BigNumberish> {
+  const gasPrice = await provider().getGasPrice();
+  console.log(gasPrice.toString());
+  return gasPrice;
 }

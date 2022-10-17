@@ -19,7 +19,7 @@ export function tokenToDecimal(
   return Number((BigInt(a) * 10000n) / BigInt(10 ** decimals)) / 10000;
 }
 
-export function safeStringify(obj: any) {
+export function safeStringify(obj: any): string {
   return JSON.stringify(
     obj,
     (_key, value) =>
