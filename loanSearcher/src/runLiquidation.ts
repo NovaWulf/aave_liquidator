@@ -2,27 +2,25 @@ import ethers from 'ethers';
 import { LiquidateLoan } from './abis/LiquidateLoan.js';
 import LiquidateLoanAbi from './abis/LiquidateLoanABI.js';
 import { LiquidationParams } from './liquidations.js';
+import { signer } from './utils/alchemy.js';
+import { safeStringify } from './utils/bigintUtils.js';
 
-export async function runLiquidation(params: LiquidationParams) {
-  const {
-    ALCHEMY_API_KEY,
-    MAINNET_PRIVATE_KEY,
-    LIQUIDATOR_CONTRACT_MAINNET_ADDRESS,
-  } = process.env;
+export async function runLiquidation(
+  params: LiquidationParams,
+): Promise<ethers.ethers.ContractReceipt> {
+  const { LIQUIDATOR_CONTRACT_MAINNET_ADDRESS } = process.env;
 
-  const alchemyProvider = new ethers.providers.AlchemyProvider(
-    'mainnet',
-    ALCHEMY_API_KEY,
-  );
-  const signer = (new ethers.Wallet(MAINNET_PRIVATE_KEY, alchemyProvider);
-
-  const liquidatorContract = (new ethers.Contract(
+  const liquidatorContract = new ethers.Contract(
     LIQUIDATOR_CONTRACT_MAINNET_ADDRESS,
     LiquidateLoanAbi.abi,
-    signer,
-  ) as unknown) as LiquidateLoan;
+    signer(),
+  ) as unknown as LiquidateLoan;
 
-  console.log();
+  console.log(`liquidator contract owner: ${await liquidatorContract.owner()}`);
+
+  console.log(
+    `about to call Liquidator contract with params: ${safeStringify(params)}`,
+  );
 
   const tx = await liquidatorContract.executeFlashLoans(
     params.assetToLiquidate,
@@ -32,5 +30,7 @@ export async function runLiquidation(params: LiquidationParams) {
     params.amountOutMin,
     params.swapPath,
   );
-  await tx.wait();
+  const receipt = await tx.wait();
+  console.log(receipt);
+  return receipt;
 }
