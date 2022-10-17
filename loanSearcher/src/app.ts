@@ -5,6 +5,7 @@ import { runLiquidation } from './runLiquidation.js';
 import { findProfitableLoan } from './searcher.js';
 import { getLoans } from './theGraph.js';
 import { getGas } from './utils/gas.js';
+import { sendMail } from './utils/mailer.js';
 dotenv.config();
 
 run();
@@ -26,13 +27,22 @@ function sleep(ms: number) {
 }
 
 async function loop() {
+  const blockNumber = process.env.TEST_BLOCK_NUMBER;
   await getGas(); // get this once per loop
 
-  const userLoans = await getLoans(1000);
-  const loan = await findProfitableLoan(userLoans);
+  const args = { maxLoops: 6, tryAmount: 1000 };
+  if (blockNumber) {
+    args['blockNumber'] = blockNumber;
+  }
 
-  if (process.env.RUN_LIQUIDATIONS) {
-    runLiquidation(loan);
+  const userLoans = await getLoans(args);
+  const loan = await findProfitableLoan(userLoans);
+  if (loan) {
+    if (process.env.RUN_LIQUIDATIONS) {
+      runLiquidation(loan);
+    }
+    console.log(loan.description);
+    sendMail(loan.description); // async
   }
 
   await sleep(60000);
