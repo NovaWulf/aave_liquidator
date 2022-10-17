@@ -18,3 +18,12 @@ export function tokenToDecimal(
 ): number {
   return Number((BigInt(a) * 10000n) / BigInt(10 ** decimals)) / 10000;
 }
+
+export function safeStringify(obj: any) {
+  return JSON.stringify(
+    obj,
+    (_key, value) =>
+      typeof value === 'bigint' ? value.toString() + 'n' : value,
+    2,
+  );
+}
