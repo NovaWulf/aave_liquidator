@@ -13,10 +13,14 @@ export async function sendMail(body: string) {
     logger: true,
   });
 
+  const subject = `${
+    process.env.LOCALHOST_PROVIDER ? '(dev)' : ''
+  } Liquidatable Loan`;
+
   const info = await transporter.sendMail({
     from: '"Aave Liquidator" <reports@novawulf.io>',
     to: process.env.NOTIFICATIONS_EMAIL,
-    subject: 'Liquidatable Loan',
+    subject,
     text: body,
   });
   console.log('Message sent: %s', info.response);
