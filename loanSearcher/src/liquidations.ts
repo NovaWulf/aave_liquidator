@@ -1,19 +1,19 @@
-import { TOKEN_LIST } from './chains.js';
 import { TokenAmount, Trade } from '@uniswap/sdk';
-import {
-  getPathAddresses,
-  showPath,
-  useTradeExactIn,
-} from './uniswap/trades.js';
-import { gasCostInWei } from './utils/gas.js';
+import { BigNumberish } from 'ethers';
 import {
   AaveLoanSummary,
   ALLOWED_LIQUIDATION,
   FLASH_LOAN_FEE,
 } from './aave.js';
+import { getUserHealthFactor } from './aaveHealth.js';
+import { TOKEN_LIST } from './chains.js';
+import {
+  getPathAddresses,
+  showPath,
+  useTradeExactIn,
+} from './uniswap/trades.js';
 import { percentBigInt, tokenToDecimal } from './utils/bigintUtils.js';
-import { sendMail } from './utils/mailer.js';
-import { BigNumberish } from 'ethers';
+import { gasCostInWei } from './utils/gas.js';
 
 const GAS_USED_ESTIMATE = 1000000n;
 
@@ -25,22 +25,43 @@ export type LiquidationParams = {
   amountOutMin: BigNumberish;
   swapPath: string[];
   profitInEthAfterGas: BigNumberish;
+  description?: string;
 };
 
 export const gasCostToLiquidate = function () {
   return gasCostInWei() * GAS_USED_ESTIMATE;
 };
 
-export function mostProfitableLoan(
+export function sortLoansbyProfit(
   loans: LiquidationParams[],
-): LiquidationParams {
+): LiquidationParams[] {
   return loans.sort((a, b) =>
     a.profitInEthAfterGas < b.profitInEthAfterGas
       ? 1
       : a.profitInEthAfterGas > b.profitInEthAfterGas
       ? -1
       : 0,
-  )[0];
+  );
+}
+
+export async function mostProfitableLoan(
+  loans: LiquidationParams[],
+): Promise<LiquidationParams> {
+  const blockNumber = process.env.TEST_BLOCK_NUMBER;
+
+  const sortedLoans = sortLoansbyProfit(loans);
+  for (const loan of sortedLoans) {
+    // double check health
+    const hf = blockNumber
+      ? await getUserHealthFactor(loan.userToLiquidate, parseInt(blockNumber))
+      : await getUserHealthFactor(loan.userToLiquidate);
+
+    const floatHF = parseFloat(hf['healthFactor']);
+    if (floatHF < 1.0) {
+      return loan;
+    }
+  }
+  return null;
 }
 
 export async function liquidationProfits(
@@ -68,6 +89,13 @@ export function knownTokens(loans: AaveLoanSummary[]): AaveLoanSummary[] {
       console.log(`unknown token: ${loan.maxCollateralSymbol}`);
       return false;
     }
+
+    // FIXME! If the collateral token is WETH, we need a different uniswap method
+    // to use.  so ignore for now.  fix after end to end test works.
+    if (loan.maxCollateralSymbol == 'WETH') {
+      // console.log('SKIPPING WETH colatteral for now');
+      // return false;
+    }
     return true;
   });
   console.log(`Found ${result.length} loans with known tokens`);
@@ -77,47 +105,23 @@ export function knownTokens(loans: AaveLoanSummary[]): AaveLoanSummary[] {
 async function liquidationProfit(
   loan: AaveLoanSummary,
 ): Promise<LiquidationParams> {
-  // console.log(loan);
-  // console.log(TOKEN_LIST);
-
-  // console.log(TOKEN_LIST[loan.maxBorrowedSymbol]);
-  // console.log(TOKEN_LIST[loan.maxCollateralSymbol]);
-
-  if (!TOKEN_LIST[loan.maxBorrowedSymbol]) {
-    console.log(`unknown token: ${loan.maxBorrowedSymbol} `);
-    return null;
-  }
-  if (!TOKEN_LIST[loan.maxCollateralSymbol]) {
-    console.log(`unknown token: ${loan.maxCollateralSymbol}`);
-    return null;
-  }
-
   //flash loan fee
   const amountToLiquidate = percentBigInt(
     BigInt(loan.maxBorrowedPrincipal),
     ALLOWED_LIQUIDATION,
   );
-  // console.log(
-  //   `amount of ${loan.maxBorrowedSymbol} to liquidate: ${amountToLiquidate}`,
-  // );
-
   const flashLoanCost = percentBigInt(amountToLiquidate, FLASH_LOAN_FEE);
-  console.log(`flash loan cost in ${loan.maxBorrowedSymbol}: ${flashLoanCost}`);
 
   //minimum amount of liquidated coins that will be paid out as profit
   const amountToLiquidateInEth = BigInt(
     tokenToDecimal(amountToLiquidate, loan.maxBorrowedDecimals) *
       loan.maxBorrowedPriceInEth,
   );
-  // console.log(`amount to liquidate in ETH (wei): ${amountToLiquidateInEth}`);
 
   const amountToLiquidateInEthPlusBonus = percentBigInt(
     amountToLiquidateInEth,
     loan.maxCollateralBonus,
   ); //add the bonus
-  // console.log(
-  //   `amount to liquidate in ETH (wei) plus bonus: ${amountToLiquidateInEthPlusBonus}`,
-  // );
 
   //this is the amount of tokens that will be received as payment for liquidation
   // and then will need to be swapped back to token of the flashloan
@@ -125,20 +129,16 @@ async function liquidationProfit(
     (amountToLiquidateInEthPlusBonus *
       BigInt(10 ** loan.maxCollateralDecimals)) /
     BigInt(loan.maxCollateralPriceInEth);
-  // console.log(`collateral tokens from payout: ${collateralTokensFromPayout}`);
 
   const fromTokenAmount = new TokenAmount(
     TOKEN_LIST[loan.maxCollateralSymbol],
     collateralTokensFromPayout,
   ); // this is the number of coins to trade (should have many 0's)
-  // console.log(`number of (collateral) tokens to trade:`);
-  // console.log(fromTokenAmount);
 
   const bestTrade: Trade = await useTradeExactIn(
     fromTokenAmount,
     TOKEN_LIST[loan.maxBorrowedSymbol],
   );
-  // console.log('best trade: ' + bestTrade);
 
   let minimumTokensAfterSwap = 0n;
   if (bestTrade) {
@@ -148,9 +148,7 @@ async function liquidationProfit(
     minimumTokensAfterSwap =
       (BigInt(String(numerator)) * BigInt(10 ** loan.maxBorrowedDecimals)) /
       BigInt(String(denominator));
-  }
-  // console.log(`tokens after swap: ${minimumTokensAfterSwap}`);
-  if (!bestTrade) {
+  } else {
     console.log(
       `couldn't find trade from: ${loan.maxCollateralSymbol} -> ${loan.maxBorrowedSymbol}, skipping `,
     );
@@ -162,27 +160,26 @@ async function liquidationProfit(
 
   const flashLoanPlusCost = flashLoanCost + amountToLiquidate;
   const profitInBorrowCurrency = minimumTokensAfterSwap - flashLoanPlusCost;
-  // console.log(`profitInBorrowCurrency: ${profitInBorrowCurrency}`);
 
   const profitInEth =
     (profitInBorrowCurrency * BigInt(loan.maxBorrowedPriceInEth)) /
     BigInt(10 ** loan.maxBorrowedDecimals);
 
-  // console.log(`profitInEth: ${profitInEth}`);
-
   const profitInEthAfterGas = profitInEth - gasFee;
-  // console.log(`profitInEthAfterGas: ${profitInEthAfterGas}`);
 
   const BONUS_THRESHOLD = parseFloat(process.env.BONUS_THRESHOLD); //in eth. A bonus below this will be ignored
 
   if (profitInEthAfterGas <= BONUS_THRESHOLD) {
     console.log(
-      `loan is not profitable to liquidate at ${profitInEthAfterGas}, skipping`,
+      `loan is not profitable to liquidate at ${tokenToDecimal(
+        profitInEthAfterGas,
+        18,
+      )}, skipping`,
     );
     return null;
   }
 
-  let description = '-------------------------';
+  let description = '-------------------------\r\n';
   description += 'About to try and liquidate this loan:\r\n';
   description += `- User ID: ${loan.userId}\r\n`;
   description += `- HealthFactor: ${loan.healthFactor.toFixed(2)}\r\n`;
@@ -218,9 +215,6 @@ async function liquidationProfit(
     18,
   )} ETH\r\n`;
 
-  console.log(description);
-  sendMail(description); // async
-
   const result: LiquidationParams = {
     assetToLiquidate: TOKEN_LIST[loan.maxBorrowedSymbol].address,
     flashAmount: amountToLiquidate,
@@ -229,6 +223,7 @@ async function liquidationProfit(
     amountOutMin: minimumTokensAfterSwap,
     swapPath: getPathAddresses(bestTrade),
     profitInEthAfterGas,
+    description,
   };
 
   return result;
