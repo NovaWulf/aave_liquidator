@@ -38,6 +38,16 @@ const config: HardhatUserConfig = {
         url: "https://eth-mainnet.g.alchemy.com/v2/" + ALCHEMY_API_KEY,
         blockNumber: 14367536,
       },
+      gasPrice: 20000000000,
+      gas: 6000000,
+    },
+    testing: {
+      forking: {
+        url: "https://eth-mainnet.g.alchemy.com/v2/" + ALCHEMY_API_KEY,
+        blockNumber: 14367536,
+      },
+      gasPrice: 20000000000,
+      gas: 6000000,
     },
     mainnet: {
       url: "https://eth-mainnet.g.alchemy.com/v2/" + ALCHEMY_API_KEY,
