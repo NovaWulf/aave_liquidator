@@ -43,11 +43,18 @@ borrowReserve: reserves(where: {currentTotalDebt_gt: 0}) {
   }
 }`;
 
+type GetLoanArgs = {
+  tryAmount?: number;
+  maxLoops?: number;
+  blockNumber?: number;
+};
+
 export const getLoans = async function (
-  tryAmount: number,
-  maxLoops = 6,
+  args: GetLoanArgs,
 ): Promise<AaveUser[]> {
+  const { tryAmount = 100, maxLoops = 6, blockNumber } = args;
   // console.log(process.env.CHAIN);
+  const blockQuery = blockNumber ? `block: {number: ${blockNumber}}` : '';
 
   const userData: AaveUser[] = [];
 
@@ -57,7 +64,7 @@ export const getLoans = async function (
     query GET_LOANS {
       users(first:${tryAmount}, skip:${
       tryAmount * count
-    }, orderBy: id, orderDirection: desc, where: {borrowedReservesCount_gt: 0}) {
+    }, orderBy: id, orderDirection: desc, where: {borrowedReservesCount_gt: 0}, ${blockQuery}) {
         ${aaveInternalQuery}
       }
     }`;
@@ -68,10 +75,17 @@ export const getLoans = async function (
   return userData;
 };
 
+type GetUserLoanArgs = {
+  userId: string;
+  blockNumber?: number;
+};
+
 export const getUserLoans = async function (
-  userId: string,
-  blockNumber?: number,
+  args: GetUserLoanArgs,
 ): Promise<AaveUser[]> {
+  const { userId, blockNumber } = args;
+  if (!userId) throw new Error('userId required for getUserLoans');
+
   if (process.env.CHAIN != 'mainnet') {
     console.log(process.env.CHAIN);
   }
