@@ -5,6 +5,7 @@ import {
   liquidationProfits,
   mostProfitableLoan,
 } from './liquidations.js';
+import { safeStringify } from './utils/bigintUtils.js';
 
 export async function findProfitableLoan(
   loans: AaveUser[],
@@ -14,7 +15,9 @@ export async function findProfitableLoan(
   const minBonusLoans = minBonus(unhealthyLoans);
   const knownTokenLoans = knownTokens(minBonusLoans);
   const profitableLoans = await liquidationProfits(knownTokenLoans);
-  const loan = mostProfitableLoan(profitableLoans);
-  console.log('most profitable loan: ' + loan);
+  const loan = await mostProfitableLoan(profitableLoans);
+  if (loan) {
+    console.log(`most profitable loan: ' + ${safeStringify(loan)}`);
+  }
   return loan;
 }
