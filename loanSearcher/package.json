@@ -25,8 +25,9 @@
   "scripts": {
     "start": "node build/src/app.js",
     "hello": "node build/src/main.js",
-    "health": "node build/src/health.js",
-    "user": "node build/src/user.js",
+    "health": "node build/src/scripts/health.js",
+    "user": "node build/src/scripts/user.js",
+    "gas": "node build/src/scripts/gas.js",
     "clean": "rimraf coverage build tmp",
     "prebuild": "npm run lint",
     "build": "tsc -p tsconfig.json",
