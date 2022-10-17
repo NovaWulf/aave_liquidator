@@ -8,13 +8,33 @@ import {
   WETH,
   Percent,
   currencyEquals,
+  Fetcher,
 } from '@uniswap/sdk';
 import { BASES_TO_CHECK_TRADES_AGAINST } from '../chains.js';
+import { provider } from '../utils/alchemy.js';
 import { usePairReserves } from './reserves.js';
 
 const ZERO_PERCENT = new Percent('0');
 const ONE_HUNDRED_PERCENT = new Percent('1');
 const MAX_HOPS = 3;
+
+export async function simpleTrade(
+  tokenAmountIn?: TokenAmount,
+  tokenOut?: Token,
+): Promise<Trade | null> {
+  const pair = await Fetcher.fetchPairData(
+    tokenAmountIn.token,
+    tokenOut,
+    provider(),
+  );
+  const bestTrade = Trade.bestTradeExactIn([pair], tokenAmountIn, tokenOut, {
+    maxHops: 3,
+    maxNumResults: 1,
+  });
+  console.log(bestTrade[0]);
+
+  return bestTrade[0];
+}
 
 /**
  * Returns the best trade for the exact amount of tokens in to the given token out
@@ -66,9 +86,7 @@ export async function useAllCommonPairs(
   if (!token1.chainId || !token2.chainId || token1.chainId != token2.chainId) {
     throw new Error('missing token or chain');
   }
-
   const chainId = token1.chainId;
-
   const bases: Token[] = chainId ? BASES_TO_CHECK_TRADES_AGAINST[chainId] : [];
 
   const [tokenA, tokenB] = [
