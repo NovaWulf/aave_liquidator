@@ -25,7 +25,7 @@ function tokenList(chainId: ChainId) {
 
 export let TOKEN_LIST = {};
 
-export function setTokenList() {
+export function setTokenList(): void {
   const chainId =
     process.env.CHAIN == 'mainnet' ? ChainId.MAINNET : ChainId.KOVAN;
   TOKEN_LIST = tokenList(chainId);

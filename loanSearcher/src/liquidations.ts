@@ -13,7 +13,7 @@ import {
   useTradeExactIn,
 } from './uniswap/trades.js';
 import { percentBigInt, tokenToDecimal } from './utils/bigintUtils.js';
-import { gasCostInWei } from './utils/gas.js';
+import { gasCost } from './utils/gas.js';
 
 const GAS_USED_ESTIMATE = 1000000n;
 
@@ -28,9 +28,9 @@ export type LiquidationParams = {
   description?: string;
 };
 
-export const gasCostToLiquidate = function () {
-  return gasCostInWei() * GAS_USED_ESTIMATE;
-};
+export function gasCostToLiquidate(): bigint {
+  return gasCost * GAS_USED_ESTIMATE;
+}
 
 export function sortLoansbyProfit(
   loans: LiquidationParams[],

@@ -1,8 +1,8 @@
 import * as dotenv from 'dotenv';
-import { setTokenList } from './chains.js';
-import { findProfitableLoan } from './searcher.js';
-import { getUserLoans } from './theGraph.js';
-import { getGas } from './utils/gas.js';
+import { setTokenList } from '../chains.js';
+import { findProfitableLoan } from '../searcher.js';
+import { getUserLoans } from '../theGraph.js';
+import { getGas } from '../utils/gas.js';
 
 dotenv.config();
 

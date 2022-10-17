@@ -1,6 +1,6 @@
 import * as dotenv from 'dotenv';
 
-import { getUserHealthFactor } from './aaveHealth.js';
+import { getUserHealthFactor } from '../aaveHealth.js';
 
 dotenv.config();
 
