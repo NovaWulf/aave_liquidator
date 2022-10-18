@@ -1,9 +1,11 @@
 import { AaveUser, mapLoans, minBonus, parseUnhealthyLoans } from './aave.js';
 import {
+  excludeRecentlyAttempted,
   knownTokens,
   LiquidationParams,
   liquidationProfits,
   mostProfitableLoan,
+  sortLoansbyProfit,
 } from './liquidations.js';
 import { safeStringify } from './utils/bigintUtils.js';
 
@@ -15,7 +17,9 @@ export async function findProfitableLoan(
   const minBonusLoans = minBonus(unhealthyLoans);
   const knownTokenLoans = knownTokens(minBonusLoans);
   const profitableLoans = await liquidationProfits(knownTokenLoans);
-  const loan = await mostProfitableLoan(profitableLoans);
+  const sortedLoans = sortLoansbyProfit(profitableLoans);
+  const newLoans = excludeRecentlyAttempted(sortedLoans);
+  const loan = await mostProfitableLoan(newLoans);
   if (loan) {
     console.log(`most profitable loan: ' + ${safeStringify(loan)}`);
   }

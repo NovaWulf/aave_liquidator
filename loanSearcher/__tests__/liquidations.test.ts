@@ -1,6 +1,7 @@
 import { AaveLoanSummary } from '../src/aave.js';
 import { setTokenList } from '../src/chains.js';
 import {
+  excludeRecentlyAttempted,
   knownTokens,
   LiquidationParams,
   liquidationProfits,
@@ -8,6 +9,33 @@ import {
   sortLoansbyProfit,
 } from '../src/liquidations.js';
 import { jest } from '@jest/globals';
+import { runLiquidation } from '../src/runLiquidation.js';
+
+describe('excluding recently attempted', () => {
+  const lp1: LiquidationParams = {
+    assetToLiquidate: 'UNI',
+    flashAmount: 1000000000000,
+    collateralAddress: '0xabc',
+    userToLiquidate: '0x234',
+    amountOutMin: 90,
+    swapPath: ['UNI', 'WETH'],
+    profitInEthAfterGas: 500,
+  };
+  const lp2: LiquidationParams = {
+    assetToLiquidate: 'UNI',
+    flashAmount: 1000000000000,
+    collateralAddress: '0xabc',
+    userToLiquidate: '0x345',
+    amountOutMin: 90,
+    swapPath: ['UNI', 'WETH'],
+    profitInEthAfterGas: 600,
+  };
+
+  it('excludes', () => {
+    runLiquidation(lp1);
+    expect(excludeRecentlyAttempted([lp1, lp2])).toEqual([lp2]);
+  });
+});
 
 describe('sorting liquidation params', () => {
   const lp1: LiquidationParams = {
@@ -23,7 +51,7 @@ describe('sorting liquidation params', () => {
     assetToLiquidate: 'UNI',
     flashAmount: 1000000000000,
     collateralAddress: '0xabc',
-    userToLiquidate: '0x234',
+    userToLiquidate: '0x345',
     amountOutMin: 90,
     swapPath: ['UNI', 'WETH'],
     profitInEthAfterGas: 600,
@@ -59,7 +87,8 @@ describe('#mostProfitableLoan', () => {
   };
 
   it('selects the most profitable', async () => {
-    expect(await mostProfitableLoan([lp1, lp2])).toEqual(lp2);
+    // these both have HFs below 1, so return the first
+    expect(await mostProfitableLoan([lp1, lp2])).toEqual(lp1);
   });
 });
 

@@ -5,9 +5,20 @@ import { LiquidationParams } from './liquidations.js';
 import { signer } from './utils/alchemy.js';
 import { safeStringify } from './utils/bigintUtils.js';
 
+export let attemptedUsers: object = {};
+
 export async function runLiquidation(
   params: LiquidationParams,
 ): Promise<ethers.ethers.ContractReceipt> {
+  if (attemptedUsers[params.userToLiquidate]) {
+    console.log("skipping this liquidation as we've already tried this user");
+    return null;
+  } else {
+    attemptedUsers[params.userToLiquidate] = true;
+  }
+
+  if (!process.env.RUN_LIQUIDATIONS) return null;
+
   const { LIQUIDATOR_CONTRACT_MAINNET_ADDRESS } = process.env;
 
   const liquidatorContract = new ethers.Contract(

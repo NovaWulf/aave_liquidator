@@ -38,9 +38,7 @@ async function loop() {
   const userLoans = await getLoans(args);
   const loan = await findProfitableLoan(userLoans);
   if (loan) {
-    if (process.env.RUN_LIQUIDATIONS) {
-      runLiquidation(loan);
-    }
+    runLiquidation(loan); // async
     console.log(loan.description);
     sendMail(loan.description); // async
   }

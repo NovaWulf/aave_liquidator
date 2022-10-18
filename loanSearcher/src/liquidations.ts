@@ -7,6 +7,7 @@ import {
 } from './aave.js';
 import { getUserHealthFactor } from './aaveHealth.js';
 import { TOKEN_LIST } from './chains.js';
+import { attemptedUsers } from './runLiquidation.js';
 import {
   getPathAddresses,
   showPath,
@@ -44,19 +45,27 @@ export function sortLoansbyProfit(
   );
 }
 
+export function excludeRecentlyAttempted(
+  loans: LiquidationParams[],
+): LiquidationParams[] {
+  console.log(attemptedUsers);
+
+  return loans.filter((l) => !attemptedUsers[l.userToLiquidate]);
+}
+
 export async function mostProfitableLoan(
   loans: LiquidationParams[],
 ): Promise<LiquidationParams> {
   const blockNumber = process.env.TEST_BLOCK_NUMBER;
 
-  const sortedLoans = sortLoansbyProfit(loans);
-  for (const loan of sortedLoans) {
+  for (const loan of loans) {
     // double check health
     const hf = blockNumber
       ? await getUserHealthFactor(loan.userToLiquidate, parseInt(blockNumber))
       : await getUserHealthFactor(loan.userToLiquidate);
 
     const floatHF = parseFloat(hf['healthFactor']);
+
     if (floatHF < 1.0) {
       return loan;
     }
