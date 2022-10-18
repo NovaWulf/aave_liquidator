@@ -48,8 +48,6 @@ export function sortLoansbyProfit(
 export function excludeRecentlyAttempted(
   loans: LiquidationParams[],
 ): LiquidationParams[] {
-  console.log(attemptedUsers);
-
   return loans.filter((l) => !attemptedUsers[l.userToLiquidate]);
 }
 

@@ -172,7 +172,8 @@ export async function parseUnhealthyLoans(
 
 // is the bonus on 50% of the biggest loan greater than .1 ETH?
 export function minBonus(loans: AaveLoanSummary[]): AaveLoanSummary[] {
-  const BONUS_THRESHOLD = parseFloat(process.env.BONUS_THRESHOLD) * 10 ** 18; //in eth. A bonus below this will be ignored
+  const threshold = parseFloat(process.env.BONUS_THRESHOLD);
+  const BONUS_THRESHOLD = threshold * 10 ** 18; //in eth. A bonus below this will be ignored
 
   const filteredLoans = loans.filter((loan) => {
     const liquidationAmount =
@@ -186,7 +187,7 @@ export function minBonus(loans: AaveLoanSummary[]): AaveLoanSummary[] {
     return loanProfit >= BONUS_THRESHOLD;
   });
   console.log(
-    `Found ${filteredLoans.length} loans with a liquidatable loan over 0.01 ETH`,
+    `Found ${filteredLoans.length} loans with a liquidatable loan over ${threshold} ETH`,
   );
   return filteredLoans;
 }

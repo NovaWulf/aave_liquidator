@@ -31,7 +31,7 @@ export async function simpleTrade(
     maxHops: 3,
     maxNumResults: 1,
   });
-  console.log(bestTrade[0]);
+  // console.log(bestTrade[0]);
 
   return bestTrade[0];
 }
