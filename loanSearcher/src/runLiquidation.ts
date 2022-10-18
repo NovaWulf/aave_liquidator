@@ -5,7 +5,7 @@ import { LiquidationParams } from './liquidations.js';
 import { signer } from './utils/alchemy.js';
 import { safeStringify } from './utils/bigintUtils.js';
 
-export let attemptedUsers: object = {};
+export const attemptedUsers: object = {};
 
 export async function runLiquidation(
   params: LiquidationParams,
