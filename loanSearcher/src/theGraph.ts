@@ -47,12 +47,18 @@ type GetLoanArgs = {
   tryAmount?: number;
   maxLoops?: number;
   blockNumber?: number;
+  orderDirection?: string;
 };
 
 export const getLoans = async function (
   args: GetLoanArgs,
 ): Promise<AaveUser[]> {
-  const { tryAmount = 100, maxLoops = 6, blockNumber } = args;
+  const {
+    tryAmount = 100,
+    maxLoops = 6,
+    orderDirection = 'desc',
+    blockNumber,
+  } = args;
   // console.log(process.env.CHAIN);
   const blockQuery = blockNumber ? `block: {number: ${blockNumber}}` : '';
 
@@ -64,7 +70,7 @@ export const getLoans = async function (
     query GET_LOANS {
       users(first:${tryAmount}, skip:${
       tryAmount * count
-    }, orderBy: id, orderDirection: desc, where: {borrowedReservesCount_gt: 0}, ${blockQuery}) {
+    }, orderBy: id, orderDirection: ${orderDirection}, where: {borrowedReservesCount_gt: 0}, ${blockQuery}) {
         ${aaveInternalQuery}
       }
     }`;

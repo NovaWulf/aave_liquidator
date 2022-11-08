@@ -16,9 +16,11 @@ async function run(): Promise<void> {
 
   setTokenList(); // relies on env vars so needs to be run at runtime
 
+  let count = 0;
   /* eslint-disable no-constant-condition */
   while (true) {
-    await loop();
+    await loop(count);
+    count++;
   }
 }
 
@@ -26,11 +28,17 @@ function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-async function loop() {
+async function loop(count: number) {
+  console.log('Starting loop: ' + count);
+
   const blockNumber = process.env.TEST_BLOCK_NUMBER;
   await getGas(); // get this once per loop
 
-  const args = { maxLoops: 6, tryAmount: 1000 };
+  const args = {
+    maxLoops: 6,
+    tryAmount: 1000,
+    orderDirection: count % 2 == 0 ? 'desc' : 'asc',
+  };
   if (blockNumber) {
     args['blockNumber'] = blockNumber;
   }
