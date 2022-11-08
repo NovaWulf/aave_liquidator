@@ -33,15 +33,41 @@ export async function runLiquidation(
     `about to call Liquidator contract with params: ${safeStringify(params)}`,
   );
 
-  const tx = await liquidatorContract.executeFlashLoans(
-    params.assetToLiquidate,
-    params.flashAmount,
-    params.collateralAddress,
-    params.userToLiquidate,
-    params.amountOutMin,
-    params.swapPath,
-  );
-  const receipt = await tx.wait();
-  console.log(receipt);
-  return receipt;
+  try {
+    const tx = await liquidatorContract.executeFlashLoans(
+      params.assetToLiquidate,
+      params.flashAmount,
+      params.collateralAddress,
+      params.userToLiquidate,
+      params.amountOutMin,
+      params.swapPath,
+    );
+    const receipt = await tx.wait();
+    console.log('***** success');
+
+    console.log(receipt);
+    return receipt;
+  } catch (e) {
+    // handle the internal error if it exists
+    if (e && e.error) {
+      switch (e.error.reason) {
+        case 'execution reverted: 42':
+          console.error(
+            `***** Health Factor for user: ${params.userToLiquidate} was not below 1`,
+          );
+          return null;
+        case 'execution reverted: no profits to return':
+          console.error(
+            `***** Not profitable enough to liquidate: ${params.userToLiquidate}`,
+          );
+          return null;
+      }
+    }
+
+    // otherwise general logging
+    console.error('***** unknown execution error');
+    console.error(e);
+
+    return null;
+  }
 }
