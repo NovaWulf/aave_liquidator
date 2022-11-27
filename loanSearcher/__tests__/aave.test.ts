@@ -1,5 +1,6 @@
 import {
   AaveLoanSummary,
+  applyBlackList,
   mapLoans,
   minBonus,
   parseUnhealthyLoans,
@@ -147,7 +148,7 @@ describe('mocked unhealthy loan', () => {
   });
 });
 
-describe('unhealthy loan above threshold', () => {
+describe('healthy loan above threshold', () => {
   it('is has a big enough bonus', () => {
     const unhealthyLoan: AaveLoanSummary = {
       userId: '0xabc',
@@ -164,6 +165,26 @@ describe('unhealthy loan above threshold', () => {
 
     const profitableLoans = minBonus([unhealthyLoan]);
     expect(profitableLoans.length).toEqual(1);
+  });
+});
+
+describe('healthy loan with blacklisted user', () => {
+  it('is has a big enough bonus', () => {
+    const healthyLoan: AaveLoanSummary = {
+      userId: '0xf37680f16b92747ee8537a7e2ccb0e51a7c52a64',
+      healthFactor: 0.13119476140428013,
+      maxCollateralSymbol: 'WETH',
+      maxBorrowedSymbol: 'DAI',
+      maxBorrowedPrincipal: 2.379851736894203e22,
+      maxBorrowedPriceInEth: 542907290000000,
+      maxBorrowedDecimals: 18,
+      maxCollateralBonus: 1.05,
+      maxCollateralPriceInEth: 1000000000000000000,
+      maxCollateralDecimals: 18,
+    };
+
+    const loans = applyBlackList([healthyLoan]);
+    expect(loans.length).toEqual(0);
   });
 });
 

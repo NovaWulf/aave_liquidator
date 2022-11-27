@@ -191,3 +191,9 @@ export function minBonus(loans: AaveLoanSummary[]): AaveLoanSummary[] {
   );
   return filteredLoans;
 }
+
+export function applyBlackList(loans: AaveLoanSummary[]): AaveLoanSummary[] {
+  // some users remain in a bad state in the graph
+  const blacklist = ['0xf37680f16b92747ee8537a7e2ccb0e51a7c52a64'];
+  return loans.filter((l) => !blacklist.includes(l.userId));
+}
